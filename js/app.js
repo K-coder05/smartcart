@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		if (viewId == 'view-auth') {
 			nav.classList.add('hidden');
 		} else {
-			nav.className.remove('hidden');
+			nav.classList.remove('hidden');
 		}
 	};
 
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	// TODO: user authentication, only have skeleton
 	document.getElementById('login-form').addEventListener('submit', (e) => {
 		e.preventDefault();
-		const user = document.getElementById('username').ariaValueMax;
+		const user = document.getElementById('username').value;
 		if (user.length > 2) {
 			currentUser = { username: user };
 			localStorage.setItem('smartcart_user', JSON. stringify(currentUser));
@@ -46,14 +46,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	// TODO: search and LLM implementation, only have skeleton
 	document.getElementById('btn-browse').addEventListener('click', async () => {
-		const budget = document.getElementById('budget-input').ariaValueMax;
+		const budget = document.getElementById('budget-input').value;
 
 		if (!budget || budget <= 0) {
 			alert("Please enter a valid budget amount.");
 			return;
 		}
 
-		document.getElementById('locading-indicator').classList.remove('hidden');
+		document.getElementById('loading-indicator').classList.remove('hidden');
 
 		try {
 			const match = await RecipeService.fetchRecipesFromLLM({
@@ -83,10 +83,10 @@ document.addEventListener("DOMContentLoaded", () => {
 		emptyState.classList.add('hidden');
 		matches.forEach(recipe => {
 			const div = document.createElement('div');
-			div.className = 'recipe-card';
+			div.classList = 'recipe-card';
 			div.innerHTML = '<h3>${recipe.name}</h3><p>${recipe.time} • $${recipe.costPerServing}</p>';
 
-			divv.addEventListener('click', () => openRecipe(recipe));
+			div.addEventListener('click', () => openRecipe(recipe));
 			container.appendChild(div);
 		});
 	};
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	document.querySelectorAll('.btn-back, .nav-item').forEach(btn => {
 		btn.addEventListener('click', (e) => {
-			const target = e.target.getAttriute('data-target');
+			const target = e.target.getAttribute('data-target');
 			if (target) {
 				navTo(target);
 			}
