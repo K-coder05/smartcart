@@ -68,4 +68,41 @@ document.addEventListener("DOMContentLoaded", () => {
 			document.getElementById('loading-indicator').classList.add('hidden');
 		}
 	});
-})
+
+	// rendering logic for recipes
+	const renderMatches = (matches) => {
+		const container = document.getElementById('recipe-list');
+		const emptyState = document.getElementById('matches-empty');
+		container.innerHTML = '';
+
+		if (matches.length === 0) {
+			emptyState.classList.remove('hidden');
+			return;
+		}
+
+		emptyState.classList.add('hidden');
+		matches.forEach(recipe => {
+			const div = document.createElement('div');
+			div.className = 'recipe-card';
+			div.innerHTML = '<h3>${recipe.name}</h3><p>${recipe.time} • $${recipe.costPerServing}</p>';
+
+			divv.addEventListener('click', () => openRecipe(recipe));
+			container.appendChild(div);
+		});
+	};
+
+	const openRecipe = (recipe) => {
+		document.getElementById('recipe-title').innerText = recipe.name;
+		// build checkboxes for ingredients here
+		navTo('view-recipe');
+	};
+
+	document.querySelectorAll('.btn-back, .nav-item').forEach(btn => {
+		btn.addEventListener('click', (e) => {
+			const target = e.target.getAttriute('data-target');
+			if (target) {
+				navTo(target);
+			}
+		});
+	});
+});
