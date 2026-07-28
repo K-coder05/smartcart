@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		} else {
 			nav.className.remove('hidden');
 		}
-	}
+	};
 
 	// check if user is logged in or not
 	if (currentUser) {
@@ -35,14 +35,14 @@ document.addEventListener("DOMContentLoaded", () => {
 		} else {
 			document.getElementById('auth-error').classList.remove('hidden');
 		}
-	})
+	});
 
 	// logs user out
 	document.getElementById('logout-btn').addEventListener('click', () => {
 		localStorage.removeItem('smartcart_user');
 		currentUser = null;
 		navTo('view-auth');
-	})
+	});
 
 	// TODO: search and LLM implementation, only have skeleton
 	document.getElementById('btn-browse').addEventListener('click', async () => {
@@ -67,5 +67,5 @@ document.addEventListener("DOMContentLoaded", () => {
 		}	finally {
 			document.getElementById('loading-indicator').classList.add('hidden');
 		}
-	})
+	});
 })
