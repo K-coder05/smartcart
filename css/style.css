@@ -1,0 +1,75 @@
+:root {
+    --bg-color: #FDFBF7;
+    --primary-yellow: #E9C46A;
+    --primary-green: #2A9D8F;
+    --text-dark: #264653;
+    --error-red: #E76F51;
+}
+
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #eee;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+}
+
+#app-container {
+    width: 100%;
+    max-width: 400px;
+    height: 100vh;
+    background-color: var(--bg-color);
+    color: var(--text-dark);
+    position: relative;
+    overflow: hidden;
+}
+
+.view {
+    padding: 20px;
+    height: calc(100% - 60px);
+    overflow-y: auto;
+}
+
+.hidden { display: none !important; }
+.active { display: block; }
+
+h1, h2, h3 { color: var(--text-dark); }
+
+.btn-primary {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--primary-yellow);
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-primary:active { opacity: 0.8; }
+
+.pill {
+    padding: 8px 16px;
+    border: 1px solid var(--primary-green);
+    border-radius: 20px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.pill.active {
+    background-color: var(--primary-green);
+    color: white;
+}
+
+#bottom-nav {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 60px;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid #ccc;
+}
