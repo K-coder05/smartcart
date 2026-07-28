@@ -1,3 +1,6 @@
+# SmartCart
+## From cooked to cooking
+
 **Functional Prototype — 45%**
 ● All major workflows and core features are fully implemented.
 ● Includes at least 5 meaningfully different pages or interface states.
