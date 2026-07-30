@@ -39,7 +39,7 @@ const RecipeService = {
                 "time": "String (e.g., 15 min)",
                 "costPerServing": Number (e.g., 4.50),
                 "ingredients": [
-                	{"name": "String", "quantity": "String"}
+                	{"name": "String", "quantity": "String", "estimatedCost": Number}
 				]
 			}
 		]
@@ -241,8 +241,43 @@ document.addEventListener("DOMContentLoaded", () => {
 	};
 
 	const openRecipe = (recipe) => {
+		// set title and meta description
 		document.getElementById('recipe-title').innerText = recipe.name;
-		// build checkboxes for ingredients here
+		document.getElementById('recipe-meta').innerText = `${recipe.time} • $${recipe.costPerServing.toFixed(2)} per serving`;
+
+		// grab container where the checkboxes will go and clear out old stuff
+		const checklistContainer = document.getElementById('ingredient-checklist');
+		checklistContainer.innerHTML = '';
+
+		// loop through the ingredients
+		if (recipe.ingredients && recipe.ingredients.length > 0) {
+			recipe.ingredients.forEach((ingredient, index) => {
+				// create label element to wrap the checkbox to make the checkbox clickable
+				const label = document.createElement('label');
+				label.style.display = 'block';
+				label.style.margin = '10px 0';
+				label.style.cursor = 'pointer';
+
+				const checkbox = document.createElement('input');
+				checkbox.type = 'checkbox';
+				checkbox.checked = false;
+
+				checkbox.dataset.name = ingredient.name;
+				checkbox.dataset.quantity = ingredient.quantity;
+
+				const cost = ingredient.estimatedCost ? ingredient.estimatedCost : 1.00;
+				checkbox.dataset.cost = cost;
+
+				const itemText = document.createTextNode(` ${ingredient.quantity} ${ingredient.name} - $${cost.toFixed(2)}`);
+
+				label.appendChild(checkbox);
+				label.appendChild(itemText);
+				checklistContainer.appendChild(label);
+			});
+		} else {
+			checklistContainer.innerHTML = '<p>No ingredients found.</p>';
+		}
+
 		navTo('view-recipe');
 	};
 
