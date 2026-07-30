@@ -30,32 +30,20 @@ const RecipeService = {
 		const safePreferences = filters.preferences ? filters.preferences : "None";
 
 		const prompt = `
-		Act as a budget-conscious chef for a college student.
-		Give me 6 affordable ${filters.mealType} recipes that cost under $${filters.budget} total.
-		The recipes and their ingredients should factor in real world limitations in the context of grocery shopping.
-		For example, no grocery store sells one single banana or a single clove of garlic; they sell them in bunches.
-		FOLLOW THESE STRICT DIETARY RESTRICTIONS:
+		Give me 6 affordable ${filters.mealType} recipes.
+
+		CRITICAL RULES FOR GROCERY MATH:
+		The user only has $${filters.budget} in their bank account to spend at the store today.
+		The SUM of all "costInStore" values across the entire recipe MUST remain under $${filters.budget}.
+
+		You must strictly differentiate between recipe quantities and store quantities:
+		1. "quantityInStore" & "costInStore": The smallest realistic unit a person can buy at a standard grocery store and its full price (e.g., "1 bottle (16oz)", 4.99).
+		2. "quantityInRecipe" & "costInRecipe": The exact amount used in the recipe, and the mathematical prorated cost of that amount (e.g., "1 tbsp (0.5oz)", 0.15).
+		3. Do NOT assume the user has any pantry staples. Everything must be bought.
+
+		STRICT DIETARY RESTRICTIONS:
 		- Allergies to avoid completely: ${safeAllergies}
 		- Dietary preferences to follow: ${safePreferences}
-		Do not use markdown. Return ONLY a JSON array of objects with this exact structure:
-		[
-			{
-				"name": "String (Recipe Name)",
-                "time": "String (e.g., 15 min)",
-                "costPerServing": Number (e.g., 4.50),
-				"totalCost": Number (e.g., 15.50),
-                "ingredients":
-				[
-                	{
-						"name": "String",
-						"quantityInRecipe": "String",
-						"costInRecipe": Number,
-						"quantityInStore: "String",
-						"costInStore": Number
-					}
-				]
-			}
-		]
 		`;
 
 		try {
@@ -64,8 +52,38 @@ const RecipeService = {
 				model: 'gemini-3.1-flash-lite',
 				contents: prompt,
 				config: {
+					systemInstruction: "You are a budget-conscious culinary expert designing grocery lists for broke college students. " +
+									   "Your primary goal is to minimize out-of-pocket grocery store costs. " +
+									   "You are a master at calculating prorated ingredient costs versus upfront store prices.",
 					responseMimeType: "application/json",
-					temperature: 0.7
+					temperature: 0.2,
+					responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                name: { type: "STRING" },
+                                time: { type: "STRING" },
+                                costPerServing: { type: "NUMBER" },
+                                totalCostInStore: { type: "NUMBER" },
+                                ingredients: {
+                                    type: "ARRAY",
+                                    items: {
+                                        type: "OBJECT",
+                                        properties: {
+                                            name: { type: "STRING" },
+                                            quantityInRecipe: { type: "STRING" },
+                                            costInRecipe: { type: "NUMBER" },
+                                            quantityInStore: { type: "STRING" },
+                                            costInStore: { type: "NUMBER" }
+                                        },
+                                        required: ["name", "quantityInRecipe", "costInRecipe", "quantityInStore", "costInStore"]
+                                    }
+                                }
+                            },
+                            required: ["name", "time", "costPerServing", "totalCostInStore", "ingredients"]
+                        }
+					}
 				}
 			});
 
@@ -252,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			const div = document.createElement('div');
 			div.classList = 'recipe-card';
 			div.innerHTML = `<h3>${recipe.name}</h3><p>${recipe.time} • $${recipe.costPerServing} per serving •
-							 total cost: $${recipe.totalCost}</p>`;
+							 total cost: $${recipe.totalCostInStore.toFixed(2)}</p>`;
 
 			div.addEventListener('click', () => openRecipe(recipe));
 			container.appendChild(div);
