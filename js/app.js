@@ -17,7 +17,10 @@ const app = window.initializeApp(firebaseConfig)
 const auth = window.getAuth(app);
 const db = window.getFirestore(app);
 
-// Gemini LLM configs
+// state tracking
+let currentActiveRecipe = null;
+
+// Gemini LLM
 const RecipeService = {
 	ai: new GoogleGenAI({ apiKey: GEMINI_API_KEY}),
 
@@ -87,6 +90,11 @@ document.addEventListener("DOMContentLoaded", () => {
 			nav.classList.add('hidden');
 		} else {
 			nav.classList.remove('hidden');
+		}
+
+		// check if user is going to Saved Recipes page
+		if (viewId === 'view-saved') {
+			fetchAndRenderSavedRecipes();
 		}
 	};
 
@@ -244,8 +252,10 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 	};
 
+	// open recipe
 	const openRecipe = (recipe) => {
-		// set title and meta description
+		// set state, title, meta description
+		currentActiveRecipe = recipe;
 		document.getElementById('recipe-title').innerText = recipe.name;
 		document.getElementById('recipe-meta').innerText = `${recipe.time} • $${recipe.costPerServing.toFixed(2)} per serving`;
 
@@ -287,6 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		navTo('view-recipe');
 	};
 
+	// add recipe to grocery list with unchecked ingredients
 	document.getElementById('btn-add-grocery').addEventListener('click', () => {
 		const checkListContainer = document.getElementById('ingredient-checklist');
 		const checkboxes = checkListContainer.querySelectorAll('input[type="checkbox"]')
@@ -320,6 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 	});
 
+	// renders grocery list and shopping cart
 	const renderGroceryList = () => {
 		const container = document.getElementById('grocery-items');
 		const totalSpan = document.getElementById('cart-total');
@@ -363,6 +375,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		totalSpan.innerText = totalCost.toFixed(2);
 	};
 
+	// nav button logic
 	document.querySelectorAll('.btn-back, .nav-item').forEach(btn => {
 		btn.addEventListener('click', (e) => {
 			const target = e.target.getAttribute('data-target');
@@ -371,6 +384,112 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		});
 	});
+
+	// save recipe to Firebase
+    document.getElementById('btn-save-recipe').addEventListener('click', async () => {
+        // check if user is logged in
+		if (!currentUser) {
+            alert("You must be logged in to save recipes!");
+            return;
+        }
+
+        if (!currentActiveRecipe) {
+            alert("No recipe selected.");
+            return;
+        }
+
+        try {
+            // get user's saved recipes in Firestore
+            const savedCollectionRef = window.collection(db, "users", currentUser.uid, "savedRecipes");
+
+            // check if recipe is already saved
+            const snapshot = await window.getDocs(savedCollectionRef);
+            const exists = snapshot.docs.some(docSnap => docSnap.data().name === currentActiveRecipe.name);
+
+            if (exists) {
+                alert("This recipe is already in your saved list!");
+                return;
+            }
+
+            // save recipe to Firestore
+            await window.addDoc(savedCollectionRef, {
+                name: currentActiveRecipe.name,
+                time: currentActiveRecipe.time,
+                costPerServing: currentActiveRecipe.costPerServing,
+                ingredients: currentActiveRecipe.ingredients,
+                savedAt: new Date()
+            });
+
+            alert("Recipe saved successfully! ❤️");
+        } catch (error) {
+            console.error("Error saving recipe to Firestore:", error);
+            alert("Failed to save recipe: " + error.message);
+        }
+    });
+
+	// fetch recipes from Firebase
+    const fetchAndRenderSavedRecipes = async () => {
+        if (!currentUser) return;
+
+		// show loading state to user
+        const container = document.getElementById('saved-recipe-list');
+        const emptyState = document.getElementById('saved-recipes-empty');
+        container.innerHTML = '<p>Loading saved recipes...</p>';
+
+        try {
+            const savedCollectionRef = window.collection(db, "users", currentUser.uid, "savedRecipes");
+            const snapshot = await window.getDocs(savedCollectionRef);
+
+            container.innerHTML = '';
+
+            if (snapshot.empty) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            snapshot.forEach(doc => {
+                const recipe = doc.data();
+                const docId = doc.id;
+
+                const div = document.createElement('div');
+                div.className = 'recipe-card';
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+
+                div.innerHTML = `
+                    <div>
+                        <h3>${recipe.name}</h3>
+                        <p>${recipe.time} • $${recipe.costPerServing.toFixed(2)}</p>
+                    </div>
+                    <button class="btn-delete" data-id="${docId}" style="background: none; border: none; cursor: pointer; color: red;">🗑️</button>
+                `;
+
+                // clicking card opens recipe details
+                div.addEventListener('click', (e) => {
+                    // ignore if clicked on delete button
+                    if (e.target.classList.contains('btn-delete')) return;
+                    openRecipe(recipe);
+                });
+
+                // delete recipe button logic
+                div.querySelector('.btn-delete').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Remove "${recipe.name}" from saved?`)) {
+                        await window.deleteDoc(window.doc(db, "users", currentUser.uid, "savedRecipes", docId));
+                        fetchAndRenderSavedRecipes();
+                    }
+                });
+
+                container.appendChild(div);
+            });
+        } catch (error) {
+            console.error("Error fetching saved recipes:", error);
+            container.innerHTML = '<p>Error loading saved recipes.</p>';
+        }
+    };
 
 	// call once to set empty grocery list
 	renderGroceryList();
