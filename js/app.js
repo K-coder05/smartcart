@@ -44,8 +44,15 @@ const RecipeService = {
                 "time": "String (e.g., 15 min)",
                 "costPerServing": Number (e.g., 4.50),
 				"totalCost": Number (e.g., 15.50),
-                "ingredients": [
-                	{"name": "String", "quantity": "String", "estimatedCost": Number}
+                "ingredients":
+				[
+                	{
+						"name": "String",
+						"quantityInRecipe": "String",
+						"costInRecipe": Number,
+						"quantityInStore: "String",
+						"costInStore": Number
+					}
 				]
 			}
 		]
@@ -277,13 +284,20 @@ document.addEventListener("DOMContentLoaded", () => {
 				checkbox.checked = false;
 
 				checkbox.dataset.name = ingredient.name;
-				checkbox.dataset.quantity = ingredient.quantity;
+				checkbox.dataset.quantityInRecipe = ingredient.quantityInRecipe;
+				checkbox.dataset.quantityInStore = ingredient.quantityInStore;
 
 				// default to $1.00 if LLM returns no cost
-				const cost = ingredient.estimatedCost ? ingredient.estimatedCost : 1.00;
-				checkbox.dataset.cost = cost;
+				const costInRecipe = ingredient.costInRecipe ? ingredient.costInRecipe : 1.00;
+				checkbox.dataset.costInRecipe = costInRecipe;
 
-				const itemText = document.createTextNode(` ${ingredient.name}: ${ingredient.quantity} - $${cost.toFixed(2)}`);
+				const costInStore = ingredient.costInStore ? ingredient.costInStore : 1.00;
+				checkbox.dataset.costInStore = costInStore;
+
+				const itemText = document.createElement('span');
+				itemText.innerHTML = ` ${ingredient.name}: ${ingredient.quantityInRecipe} - $${costInRecipe.toFixed(2)}<br>
+									   <span style="font-size: 0.85em; color: #666; margin-left: 20px;">
+									   Store price: ${ingredient.quantityInStore} - $${costInStore.toFixed(2)}</span>`;
 
 				// make HTML element and inject it into the container
 				label.appendChild(checkbox);
@@ -308,8 +322,8 @@ document.addEventListener("DOMContentLoaded", () => {
 			if (!checkbox.checked) {
 				const item = {
 					name: checkbox.dataset.name,
-					quantity: checkbox.dataset.quantity,
-					cost: parseFloat(checkbox.dataset.cost)
+					quantityInStore: checkbox.dataset.quantityInStore,
+					costInStore: parseFloat(checkbox.dataset.costInStore)
 				};
 
 				currentList.push(item);
@@ -346,8 +360,8 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 
 		let totalCost = 0;
-		currentList.forEach((item, index) => {
-			totalCost += item.cost;
+		currentList.forEach((ingredient, index) => {
+			totalCost += ingredient.costInStore;
 
 			const div = document.createElement('div');
 			div.className = 'grocery-item';
@@ -359,11 +373,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 			// add name and quantity
 			const textSpan = document.createElement('span');
-            textSpan.innerText = `${item.name}: ${item.quantity}`;
+            textSpan.innerText = `${ingredient.name}: ${ingredient.quantityInStore}`;
 
 			// add cost
 			const costSpan = document.createElement('span');
-            costSpan.innerText = `$${item.cost.toFixed(2)}`;
+            costSpan.innerText = `$${ingredient.costInStore.toFixed(2)}`;
             costSpan.style.fontWeight = 'bold';
 
 			// make HTML element and add it to container
