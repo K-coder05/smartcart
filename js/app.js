@@ -265,11 +265,13 @@ document.addEventListener("DOMContentLoaded", () => {
 				checkbox.dataset.name = ingredient.name;
 				checkbox.dataset.quantity = ingredient.quantity;
 
+				// default to $1.00 if LLM returns no cost
 				const cost = ingredient.estimatedCost ? ingredient.estimatedCost : 1.00;
 				checkbox.dataset.cost = cost;
 
 				const itemText = document.createTextNode(` ${ingredient.quantity} ${ingredient.name} - $${cost.toFixed(2)}`);
 
+				// make HTML element and inject it into the container
 				label.appendChild(checkbox);
 				label.appendChild(itemText);
 				checklistContainer.appendChild(label);
@@ -281,6 +283,82 @@ document.addEventListener("DOMContentLoaded", () => {
 		navTo('view-recipe');
 	};
 
+	document.getElementById('btn-add-grocery').addEventListener('click', () => {
+		const checkListContainer = document.getElementById('ingredient-checklist');
+		const checkboxes = checkListContainer.querySelectorAll('input[type="checkbox"]')
+
+		let addedCount = 0;
+		checkboxes.forEach(checkbox => {
+			// add to list if checkbox unchecked
+			if (!checkbox.checked) {
+				const item = {
+					name: checkbox.dataset.name,
+					quantity: checkbox.dataset.quantity,
+					cost: parseFloat(checkbox.dataset.cost)
+				};
+
+				currentList.push(item);
+				addedCount++;
+			}
+		});
+
+		if (addedCount > 0) {
+			renderGroceryList();
+
+			const toast = document.getElementById('toast-confirm');
+			toast.classList.remove('hidden');
+
+			setTimeout(() => {
+				toast.classList.add('hidden');
+			}, 3000);
+		} else {
+			alert("No ingredients to add!");
+		}
+	});
+
+	const renderGroceryList = () => {
+		const container = document.getElementById('grocery-items');
+		const totalSpan = document.getElementById('cart-total');
+
+		// clear out old stuff
+		container.innerHTML = '';
+
+		if (currentList.length === 0) {
+			container.innerHTML = '<p style="text-align: center; color: #666;">Your grocery list is empty :(</p>';
+			totalSpan.innerText = '0.00';
+			return;
+		}
+
+		let totalCost = 0;
+		currentList.forEach((item, index) => {
+			totalCost += item.cost;
+
+			const div = document.createElement('div');
+			div.className = 'grocery-item';
+
+			div.style.display = 'flex';
+			div.style.justifyContent = 'space-between';
+			div.style.padding = '12px 0';
+			div.style.borderBottom = '1px solid #eee';
+
+			// add name and quantity
+			const textSpan = document.createElement('span');
+            textSpan.innerText = `${item.quantity} ${item.name}`;
+
+			// add cost
+			const costSpan = document.createElement('span');
+            costSpan.innerText = `$${item.cost.toFixed(2)}`;
+            costSpan.style.fontWeight = 'bold';
+
+			// make HTML element and add it to container
+			div.appendChild(textSpan);
+			div.appendChild(costSpan);
+			container.appendChild(div);
+		});
+
+		totalSpan.innerText = totalCost.toFixed(2);
+	};
+
 	document.querySelectorAll('.btn-back, .nav-item').forEach(btn => {
 		btn.addEventListener('click', (e) => {
 			const target = e.target.getAttribute('data-target');
@@ -289,4 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		});
 	});
+
+	// call once to set empty grocery list
+	renderGroceryList();
 });
