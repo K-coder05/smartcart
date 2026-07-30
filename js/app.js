@@ -22,9 +22,16 @@ const RecipeService = {
 	ai: new GoogleGenAI({ apiKey: GEMINI_API_KEY}),
 
 	async fetchRecipesFromLLM(filters) {
+		// handle empty strings
+		const safeAllergies = filters.allergies ? filters.allergies : "None";
+		const safePreferences = filters.preferences ? filters.preferences : "None";
+
 		const prompt = `
-		Act as a budget-conscious chef for a broke college student.
-		Create 3 origin, affordable ${filters.mealType} recipes that cost under $${filters.budget} total.
+		Act as a budget-conscious chef for a college student.
+		Create 6 origin, affordable ${filters.mealType} recipes that cost under $${filters.budget} total.
+		FOLLOW THESE STRICT DIETARY RESTRICTIONS:
+		- Allergies to avoid completely: ${safeAllergies}
+		- Dietary preferences to follow: ${safePreferences}
 		Do not use markdown. Return ONLY a JSON array of objects with this exact structure:
 		[
 			{
@@ -163,7 +170,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	// search and LLM implementation
 	document.getElementById('btn-browse').addEventListener('click', async () => {
+		// get budget and dietary inputs from user
 		const budget = document.getElementById('budget-input').value;
+		const allergies = document.getElementById('allergies-input').value.trim();
+		const preferences = document.getElementById('preferences-input').value.trim();
 
 		if (!budget || budget <= 0) {
 			alert("Please enter a valid budget amount.");
@@ -182,10 +192,12 @@ document.addEventListener("DOMContentLoaded", () => {
 			// call function to fetch from Gemini
 			const matches = await RecipeService.fetchRecipesFromLLM({
 				budget: budget,
-				mealType: mealType
+				mealType: mealType,
+				allergies: allergies,
+				preferences: preferences
 			});
 
-			// redner results to user
+			// render results to user
 			renderMatches(matches);
 			navTo('view-matches');
 		} catch (error) {
@@ -221,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		matches.forEach(recipe => {
 			const div = document.createElement('div');
 			div.classList = 'recipe-card';
-			div.innerHTML = `<h3>${recipe.name}</h3><p>${recipe.time} • $${recipe.costPerServing}</p>`;
+			div.innerHTML = `<h3>${recipe.name}</h3><p>${recipe.time} • $${recipe.costPerServing} per serving</p>`;
 
 			div.addEventListener('click', () => openRecipe(recipe));
 			container.appendChild(div);
