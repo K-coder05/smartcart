@@ -28,7 +28,9 @@ const RecipeService = {
 
 		const prompt = `
 		Act as a budget-conscious chef for a college student.
-		Create 6 origin, affordable ${filters.mealType} recipes that cost under $${filters.budget} total.
+		Give me 6 affordable ${filters.mealType} recipes that cost under $${filters.budget} total.
+		The recipes and their ingredients should factor in real world limitations in the context of grocery shopping.
+		For example, no grocery store sells one single banana or a single clove of garlic; they sell them in bunches.
 		FOLLOW THESE STRICT DIETARY RESTRICTIONS:
 		- Allergies to avoid completely: ${safeAllergies}
 		- Dietary preferences to follow: ${safePreferences}
@@ -38,6 +40,7 @@ const RecipeService = {
 				"name": "String (Recipe Name)",
                 "time": "String (e.g., 15 min)",
                 "costPerServing": Number (e.g., 4.50),
+				"totalCost": Number (e.g., 15.50),
                 "ingredients": [
                 	{"name": "String", "quantity": "String", "estimatedCost": Number}
 				]
@@ -233,7 +236,8 @@ document.addEventListener("DOMContentLoaded", () => {
 		matches.forEach(recipe => {
 			const div = document.createElement('div');
 			div.classList = 'recipe-card';
-			div.innerHTML = `<h3>${recipe.name}</h3><p>${recipe.time} • $${recipe.costPerServing} per serving</p>`;
+			div.innerHTML = `<h3>${recipe.name}</h3><p>${recipe.time} • $${recipe.costPerServing} per serving •
+							 total cost: $${recipe.totalCost}</p>`;
 
 			div.addEventListener('click', () => openRecipe(recipe));
 			container.appendChild(div);
@@ -269,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				const cost = ingredient.estimatedCost ? ingredient.estimatedCost : 1.00;
 				checkbox.dataset.cost = cost;
 
-				const itemText = document.createTextNode(` ${ingredient.quantity} ${ingredient.name} - $${cost.toFixed(2)}`);
+				const itemText = document.createTextNode(` ${ingredient.name}: ${ingredient.quantity} - $${cost.toFixed(2)}`);
 
 				// make HTML element and inject it into the container
 				label.appendChild(checkbox);
@@ -343,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 			// add name and quantity
 			const textSpan = document.createElement('span');
-            textSpan.innerText = `${item.quantity} ${item.name}`;
+            textSpan.innerText = `${item.name}: ${item.quantity}`;
 
 			// add cost
 			const costSpan = document.createElement('span');
