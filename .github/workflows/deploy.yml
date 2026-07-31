@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy static content to Pages
 
 on:
   push:
@@ -16,14 +16,19 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject API Key into config.js
-        run: echo "export const GEMINI_API_KEY = '${{ secrets.GEMINI_API_KEY }}';" > config.js
-
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v4
+
+      - name: Inject API Key into config.js
+        run: |
+          echo "const firebaseConfig = {}; // Keep your firebase config in app.js" > config.js
+          echo "const RecipeService = {" >> config.js
+          echo "  apiKey: '${{ secrets.GEMINI_API_KEY }}'," >> config.js
+          echo "  apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'" >> config.js
+          echo "};" >> config.js
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
