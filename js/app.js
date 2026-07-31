@@ -267,9 +267,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		emptyState.classList.add('hidden');
 		matches.forEach(recipe => {
+			const imagePrompt = `${recipe.name}, delicious food photography, high quality, well-lit`;
+			const safeUrlPrompt = encodeURIComponent(imagePrompt);
+
+			// optimizations to make the images generate faster from AI image generator
+			const randomSeed = Math.floor(Math.random() * 10000);
+    		const imageUrl = `https://image.pollinations.ai/prompt/${safeUrlPrompt}?width=400&height=300&seed=${randomSeed}`;
+
+			// fallback image if image doesn't generate fast enough
+			const fallbackUrl = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=400&q=80';
+
 			const div = document.createElement('div');
 			div.classList = 'recipe-card';
-			div.innerHTML = `<h3>${recipe.name}</h3><p>${recipe.time} • $${recipe.costPerServing} per serving •
+			div.innerHTML = `<img src="${imageUrl}"
+								alt="${recipe.name}"
+								onerror="this.onerror=null; this.src='${fallbackUrl}';"
+								style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">
+							 <h3>${recipe.name}</h3><p>${recipe.time} • $${recipe.costPerServing} per serving •
 							 total cost: $${recipe.totalCostInStore.toFixed(2)}</p>`;
 
 			div.addEventListener('click', () => openRecipe(recipe));
