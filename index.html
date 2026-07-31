@@ -3,22 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartCart: from cooked to cooking</title>
+    <title>MealMincer: from cooked to cooking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cute+Font" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="app-container">
-
         <section id="view-auth" class="view active">
-            <h1>SmartCart</h1>
-            <p>The app that takes you from cooked to cooking.</p>
+            <div class="auth-mascot">
+                <img src="assets/cat.svg" alt="" id="home-cat">
+            </div>
+            <div class="auth-brand">
+                <img src="assets/plate.svg" alt="" id="logo">
+                <p class="tagline">Taking you from cooked to cooking.</p>
+                <div class="auth-btn-row">
+                        <button type="submit" id="btn-login" class="btn-primary">Log In</button>
+                        <button type="submit" id="btn-signup" class="btn-secondary">Sign Up</button>
+                    </div>
+                <div id="auth-error" class="error-text hidden">Invalid email or password.</div>
+            </div>
+        </section>
+
+        <section id="view-login" class="view hidden">
+            <h1>Welcome back! Please log in below</h1>
             <form id="login-form">
-                <input type="text" id="username" placeholder="Email" required>
-                <input type="password" id="password" placeholder="Password" required>
-                <button type="submit" id="btn-login" class="btn-primary">Log In</button>
-                <button type="button" id="btn-signup" class="btn-secondary">Sign Up</button>
+                <label for="username">Username:</label>
+                <input type="text" id="username" placeholder="Enter username" required>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" placeholder="Enter password" required>
+
+                <button type="button" class="btn-back-signup" data-target="view-auth">Back</button>
+                <button type="submit" class="btn-signup-submit">Log in</button>
             </form>
-            <div id="auth-error" class="error-text hidden">Invalid email or password.</div>
+        </section>
+
+        <section id="view-signup" class="view hidden">
+            <h1>Nice to meet a new friend! Please sign up below</h1>
+            <form id="signup-form">
+                <label for="username">Username:</label>
+                <input type="text" id="signup-username" placeholder="Enter username" required>
+
+                <label for="password">Password:</label>
+                <input type="password" id="signup-password" placeholder="Enter password" required>
+
+                <label for="confirm-password">Confirm Password:</label>
+                <input type="password" id="confirm-password" placeholder="Enter password" required>
+
+                <button type="button" class="btn-back-signup" data-target="view-auth">Back</button>
+                <button type="submit" class="btn-signup-submit">Sign up</button>
+            </form>
         </section>
 
         <section id="view-home" class="view hidden">

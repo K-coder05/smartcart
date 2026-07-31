@@ -2,12 +2,17 @@
     --bg-color: #FDFBF7;
     --primary-yellow: #E9C46A;
     --primary-green: #2A9D8F;
-    --text-dark: #264653;
+    --text-dark: #000000;
     --error-red: #E76F51;
 }
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Cute Font', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 40px;
     background-color: #eee;
     margin: 0;
     display: flex;
@@ -42,7 +47,6 @@ h1, h2, h3 { color: var(--text-dark); }
     border: none;
     border-radius: 8px;
     font-size: 1.2rem;
-    font-weight: bold;
     cursor: pointer;
     margin-top: 10px;
 }
@@ -72,4 +76,177 @@ h1, h2, h3 { color: var(--text-dark); }
     justify-content: space-around;
     align-items: center;
     border-top: 1px solid #ccc;
+}
+
+#view-auth {
+    padding: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(
+        to bottom,
+        #BFEDE8 0%,
+        #BFEDE8 42%,
+        #C9D9BC 42%,
+        #C9D9BC 100%
+    );
+}
+
+#view-signup {
+    padding: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(
+        to bottom,
+        #BFEDE8 0%,
+        #BFEDE8 20%,
+        #C9D9BC 20%,
+        #C9D9BC 100%
+    );
+}
+
+#view-login {
+    padding: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(
+        to bottom,
+        #BFEDE8 0%,
+        #BFEDE8 20%,
+        #C9D9BC 20%,
+        #C9D9BC 100%
+    );
+}
+
+#view-signup, #view-login h1 {
+    font-size: 64px;
+    font-weight: normal;
+    line-height: 1.3;
+    text-align: center;
+    padding: 30px 24px 20px;
+    margin: 0;
+}
+
+#view-signup, #view-login form {
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+#view-signup, #view-login label {
+    font-family: 'Cute Font', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    margin-top: 16px;
+}
+
+#view-signup, #view-login input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #E8EDE3;
+}
+
+#view-signup, #view-login input::placeholder {
+    color: #999;
+}
+
+.btn-back-signup,
+.btn-signup-submit {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    background-color: #1F2937;
+    color: white;
+    border: none;
+    border-radius: 999px;
+    font-family: 'Cute Font', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 40px;
+    cursor: pointer;
+}
+
+.btn-back-signup:active,
+.btn-signup-submit:active {
+    opacity: 0.8;
+}
+
+.auth-mascot {
+    display: flex;
+    justify-content: center;
+    margin-bottom: -120px;
+}
+
+.auth-mascot img {
+    width: 85%;
+    max-width: 400px;
+    transform: translate(30px, 40px);
+    position: relative;
+    z-index: 1;
+}
+
+.auth-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 24px;
+    margin-top: -10px;
+    position: relative;
+    z-index: 2;
+}
+
+.auth-brand img#logo {
+    width: 95%;
+    max-width: 400px;
+    margin-bottom: 16px;
+}
+
+.tagline {
+    text-align: center;
+    color: var(--text-dark);
+    font-weight: 500;
+    margin: 0 0 16px;
+}
+
+#signup-form {
+    width: 100%;
+}
+
+#signup-form input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.auth-btn-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.auth-btn-row .btn-primary,
+.auth-btn-row .btn-secondary {
+    flex: 1;
+    margin-top: 6px;
+    background-color: #1F2937;
+    color: white;
+    border-radius: 24px;
+    padding: 14px 20px;
+    font-family: 'Cute Font', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 48px;
+    white-space: nowrap;
+}
+
+.auth-btn-row .btn-primary:active,
+.auth-btn-row .btn-secondary:active {
+    opacity: 0.8;
 }

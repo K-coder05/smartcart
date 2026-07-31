@@ -142,6 +142,16 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 	});
 
+	// navigate to signup page
+	document.getElementById('btn-signup').addEventListener('click', () => {
+		navTo('view-signup');
+	});
+
+	// navigate to login page
+	document.getElementById('btn-login').addEventListener('click', () => {
+		navTo('view-login');
+	});
+
 	// logging in to Firebase
 	document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -165,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 	// create account in Firebase
-	document.getElementById('btn-signup').addEventListener('click', async () => {
+	document.getElementById('signup-form').addEventListener('click', async () => {
         document.getElementById('auth-error').classList.add('hidden');
 
         const email = document.getElementById('username').value.trim();
@@ -408,7 +418,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	};
 
 	// nav button logic
-	document.querySelectorAll('.btn-back, .nav-item').forEach(btn => {
+	document.querySelectorAll('.btn-back, .nav-item, .btn-back-signup').forEach(btn => {
 		btn.addEventListener('click', (e) => {
 			const target = e.target.getAttribute('data-target');
 			if (target) {
