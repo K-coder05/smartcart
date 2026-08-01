@@ -44,6 +44,9 @@ const RecipeService = {
 		STRICT DIETARY RESTRICTIONS:
 		- Allergies to avoid completely: ${safeAllergies}
 		- Dietary preferences to follow: ${safePreferences}
+
+		Add in 1 or 2 keywords that describe the dish for a stock photo search (e.g., 'fajitas', 'curry', 'shakshuka').
+		Never use generic words like 'sheet' or 'bowl'."
 		`;
 
 		try {
@@ -52,7 +55,7 @@ const RecipeService = {
 				model: 'gemini-3.1-flash-lite',
 				contents: prompt,
 				config: {
-					systemInstruction: "You are a budget-conscious culinary expert designing grocery lists for broke college students. " +
+					systemInstruction: "You are a budget-conscious culinary expert designing grocery lists for college students. " +
 									   "Your primary goal is to minimize out-of-pocket grocery store costs. " +
 									   "You are a master at calculating prorated ingredient costs versus upfront store prices.",
 					responseMimeType: "application/json",
@@ -66,6 +69,7 @@ const RecipeService = {
                                 time: { type: "STRING" },
                                 costPerServing: { type: "NUMBER" },
                                 totalCostInStore: { type: "NUMBER" },
+								imageKeyword: { type: "STRING" },
                                 ingredients: {
                                     type: "ARRAY",
                                     items: {
@@ -75,13 +79,13 @@ const RecipeService = {
                                             quantityInRecipe: { type: "STRING" },
                                             costInRecipe: { type: "NUMBER" },
                                             quantityInStore: { type: "STRING" },
-                                            costInStore: { type: "NUMBER" }
+                                            costInStore: { type: "NUMBER" },
                                         },
                                         required: ["name", "quantityInRecipe", "costInRecipe", "quantityInStore", "costInStore"]
                                     }
                                 }
                             },
-                            required: ["name", "time", "costPerServing", "totalCostInStore", "ingredients"]
+                            required: ["name", "time", "costPerServing", "totalCostInStore", "ingredients", "imageKeyword"]
                         }
 					}
 				}
@@ -238,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			navTo('view-matches');
 		} catch (error) {
 			console.error('Error fetching recipes: ', error);
-			alert("The Pantry Cat got confused. Please try again!");
+			alert("Oski got confused. Please try again!");
 		} finally {
 			// hide loading state from user
 			document.getElementById('loading-indicator').classList.add('hidden');
@@ -266,25 +270,29 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 
 		emptyState.classList.add('hidden');
-		matches.forEach(recipe => {
-			const imagePrompt = `${recipe.name}, delicious food photography, high quality, well-lit`;
-			const safeUrlPrompt = encodeURIComponent(imagePrompt);
 
-			// optimizations to make the images generate faster from AI image generator
-			const randomSeed = Math.floor(Math.random() * 10000);
-    		const imageUrl = `https://image.pollinations.ai/prompt/${safeUrlPrompt}?width=400&height=300&seed=${randomSeed}`;
+		// loop through recipes
+		matches.forEach((recipe) => {
+			const rawKeyword = recipe.imageKeyword ? recipe.imageKeyword.toLowerCase() : "food";
+			console.log(rawKeyword)
+			const searchKeyword = rawKeyword.replace(/\s+/g, ',');
 
-			// fallback image if image doesn't generate fast enough
+			// add image to recipe
+			const fastImageUrl = `https://loremflickr.com/400/300/food,${searchKeyword}`;
+			recipe.displayImageUrl = fastImageUrl;
 			const fallbackUrl = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=400&q=80';
 
 			const div = document.createElement('div');
 			div.classList = 'recipe-card';
-			div.innerHTML = `<img src="${imageUrl}"
-								alt="${recipe.name}"
-								onerror="this.onerror=null; this.src='${fallbackUrl}';"
-								style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">
-							 <h3>${recipe.name}</h3><p>${recipe.time} • $${recipe.costPerServing} per serving •
-							 total cost: $${recipe.totalCostInStore.toFixed(2)}</p>`;
+
+			div.innerHTML = `
+				<img src="${fastImageUrl}"
+					alt="${recipe.name}"
+					onerror="this.onerror=null; this.src='${fallbackUrl}';"
+					style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">
+				<h3>${recipe.name}</h3>
+				<p>${recipe.time} • $${recipe.costPerServing} per serving • total cost: $${recipe.totalCostInStore.toFixed(2)}</p>
+			`;
 
 			div.addEventListener('click', () => openRecipe(recipe));
 			container.appendChild(div);
@@ -298,9 +306,14 @@ document.addEventListener("DOMContentLoaded", () => {
 		document.getElementById('recipe-title').innerText = recipe.name;
 		document.getElementById('recipe-meta').innerText = `${recipe.time} • $${recipe.costPerServing.toFixed(2)} per serving`;
 
-		// grab container where the checkboxes will go and clear out old stuff
+		const fallbackUrl = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=800&q=80';
+
+		// grab container where the checkboxes will go and clear out old stuff and add image
 		const checklistContainer = document.getElementById('ingredient-checklist');
-		checklistContainer.innerHTML = '';
+		checklistContainer.innerHTML = `<img src="${recipe.displayImageUrl}"
+										alt="${recipe.name}"
+										onerror="this.onerror=null; this.src='${fallbackUrl}';"
+										style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px; margin-bottom: 20px;">`;
 
 		// loop through the ingredients
 		if (recipe.ingredients && recipe.ingredients.length > 0) {
@@ -463,7 +476,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 time: currentActiveRecipe.time,
                 costPerServing: currentActiveRecipe.costPerServing,
                 ingredients: currentActiveRecipe.ingredients,
-                savedAt: new Date()
+                savedAt: new Date(),
+				displayImageUrl: currentActiveRecipe.displayImageUrl
             });
 
             alert("Recipe saved successfully! ❤️");
@@ -505,8 +519,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 div.style.justifyContent = 'space-between';
                 div.style.alignItems = 'center';
 
+				const fallbackUrl = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=800&q=80';
+
                 div.innerHTML = `
                     <div>
+						<img src="${recipe.displayImageUrl}"
+										alt="${recipe.name}"
+										onerror="this.onerror=null; this.src='${fallbackUrl}';"
+										style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px; margin-bottom: 20px;">
                         <h3>${recipe.name}</h3>
                         <p>${recipe.time} • $${recipe.costPerServing.toFixed(2)}</p>
                     </div>
