@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.onAuthStateChanged(auth, (user) => {
         if (user) {
             currentUser = user;
-            document.getElementById('account-email').innerText = user.email || "SmartCart member";
+            document.getElementById('account-email').innerText = user.email || "MealMincer member";
             navTo('view-wizard');
         } else {
             currentUser = null;
