@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById(viewId).classList.remove('hidden');
 
         const nav = document.getElementById('bottom-nav');
-        const navVisibleViews = ['view-matches', 'view-recipe', 'view-saved', 'view-grocery', 'view-account'];
+        const navVisibleViews = ['view-wizard', 'view-matches', 'view-recipe', 'view-saved', 'view-grocery', 'view-account'];
         if (navVisibleViews.includes(viewId)) {
             nav.classList.remove('hidden');
         } else {
