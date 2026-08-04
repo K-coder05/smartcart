@@ -125,13 +125,33 @@ const hashPick = (str, arr) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+    let savedNames = new Set();
+    let grocerySaveQueue = Promise.resolve();
+
+    const persistGroceryList = () => {
+        if (!currentUser) return Promise.resolve();
+
+        const userId = currentUser.uid;
+        const groceryList = currentList.map(item => ({ ...item }));
+        grocerySaveQueue = grocerySaveQueue
+            .catch(() => {})
+            .then(() => window.setDoc(
+                window.doc(db, "users", userId),
+                { groceryList },
+                { merge: true }
+            ))
+            .catch(error => {
+                console.error("Error saving grocery list:", error);
+            });
+        return grocerySaveQueue;
+    };
 
     const navTo = (viewId) => {
         document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
         document.getElementById(viewId).classList.remove('hidden');
 
         const nav = document.getElementById('bottom-nav');
-        const navVisibleViews = ['view-matches', 'view-recipe', 'view-saved', 'view-grocery', 'view-account'];
+        const navVisibleViews = ['view-wizard', 'view-matches', 'view-recipe', 'view-saved', 'view-grocery', 'view-account'];
         if (navVisibleViews.includes(viewId)) {
             nav.classList.remove('hidden');
         } else {
@@ -160,13 +180,32 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('btn-get-started').addEventListener('click', () => navTo('view-signup'));
     document.getElementById('btn-have-account').addEventListener('click', () => navTo('view-signin'));
 
-    window.onAuthStateChanged(auth, (user) => {
+    window.onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
             document.getElementById('account-email').innerText = user.email || "MealMincer member";
+            savedNames.clear();
+            currentList = [];
+            try {
+                const savedCollectionRef = window.collection(db, "users", user.uid, "savedRecipes");
+                const userDocRef = window.doc(db, "users", user.uid);
+                const [savedSnapshot, userSnapshot] = await Promise.all([
+                    window.getDocs(savedCollectionRef),
+                    window.getDoc(userDocRef)
+                ]);
+                savedSnapshot.forEach(docSnap => savedNames.add(docSnap.data().name));
+                const storedList = userSnapshot.exists() ? userSnapshot.data().groceryList : [];
+                currentList = Array.isArray(storedList) ? storedList : [];
+            } catch (error) {
+                console.error("Error loading user data:", error);
+            }
+            document.getElementById('grocery-cart-badge').innerText = currentList.length || '';
             navTo('view-wizard');
         } else {
             currentUser = null;
+            savedNames.clear();
+            currentList = [];
+            document.getElementById('grocery-cart-badge').innerText = '';
             navTo('view-landing');
         }
     });
@@ -297,8 +336,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     let activeSort = 'best';
-    let savedNames = new Set();
-
     const filteredSortedMatches = () => {
         const q = document.getElementById('match-search').value.trim().toLowerCase();
         let list = currentMatches.filter(r => r.name.toLowerCase().includes(q));
@@ -357,9 +394,11 @@ document.addEventListener("DOMContentLoaded", () => {
             div.querySelector('.match-card__thumb').addEventListener('click', () => openRecipe(recipe));
             div.querySelector('.btn-heart').addEventListener('click', async (e) => {
                 e.stopPropagation();
-                await saveRecipe(recipe);
-                savedNames.add(recipe.name);
-                drawMatchList();
+                const button = e.currentTarget;
+                button.disabled = true;
+                const isSaved = await toggleRecipeSaved(recipe);
+                button.disabled = false;
+                if (isSaved !== null) drawMatchList();
             });
             container.appendChild(div);
         });
@@ -375,10 +414,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    const renderIngredients = () => {
+    const renderIngredients = (preserveChecked = false) => {
         const recipe = currentActiveRecipe;
         const scale = currentServings / BASE_SERVINGS;
         const checklistContainer = document.getElementById('ingredient-checklist');
+        const checkedIngredientNames = preserveChecked
+            ? new Set(
+                Array.from(checklistContainer.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map(checkbox => checkbox.dataset.name)
+            )
+            : new Set();
         const fallbackUrl = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=800&q=80';
 
         checklistContainer.innerHTML = `<img src="${recipe.displayImageUrl}"
@@ -395,8 +440,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const label = document.createElement('label');
             label.className = 'ingredient-row';
 
-            const scaledRecipeCost = (ingredient.costInRecipe || 1) * scale;
-            const costInStore = ingredient.costInStore ? ingredient.costInStore : 1.00;
+            const recipeCost = Number(ingredient.costInRecipe) || 0;
+            const scaledRecipeCost = recipeCost * scale;
+            const costInStore = Number(ingredient.costInStore) || 0;
 
             label.innerHTML = `
                 <input type="checkbox" class="chk">
@@ -405,10 +451,12 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
 
             const checkbox = label.querySelector('input');
+            checkbox.checked = checkedIngredientNames.has(ingredient.name);
             checkbox.dataset.name = ingredient.name;
             checkbox.dataset.category = ingredient.category || 'Other';
             checkbox.dataset.quantityInStore = ingredient.quantityInStore;
             checkbox.dataset.costInStore = costInStore;
+            checkbox.dataset.estimatedCost = scaledRecipeCost;
             checkbox.addEventListener('change', updateCartSummary);
 
             checklistContainer.appendChild(label);
@@ -420,17 +468,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const checkboxes = document.querySelectorAll('#ingredient-checklist input[type="checkbox"]');
         let haveCount = 0;
         let addCount = 0;
-        let addTotal = 0;
+        let recipeTotal = 0;
+        let checkoutTotal = 0;
         checkboxes.forEach(cb => {
             if (cb.checked) {
                 haveCount++;
             } else {
                 addCount++;
-                addTotal += parseFloat(cb.dataset.costInStore) || 0;
+                recipeTotal += parseFloat(cb.dataset.estimatedCost) || 0;
+                checkoutTotal += parseFloat(cb.dataset.costInStore) || 0;
             }
         });
         document.getElementById('cart-summary-have').innerText = `You already have ${haveCount} item${haveCount === 1 ? '' : 's'}`;
-        document.getElementById('cart-summary-amount').innerText = money(addTotal);
+        document.getElementById('cart-summary-amount').innerText = money(recipeTotal);
+        document.getElementById('cart-summary-checkout').innerText = money(checkoutTotal);
         document.getElementById('btn-add-grocery').innerText = `Add ${addCount} item${addCount === 1 ? '' : 's'} to Grocery List`;
     };
 
@@ -460,7 +511,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('servings-select').addEventListener('change', (e) => {
         currentServings = parseInt(e.target.value);
-        renderIngredients();
+        renderIngredients(true);
     });
 
     document.getElementById('instructions-toggle').addEventListener('click', () => {
@@ -470,7 +521,7 @@ document.addEventListener("DOMContentLoaded", () => {
         caret.innerText = body.classList.contains('hidden') ? '⌄' : '⌃';
     });
 
-    document.getElementById('btn-add-grocery').addEventListener('click', () => {
+    document.getElementById('btn-add-grocery').addEventListener('click', async () => {
         const checkboxes = document.querySelectorAll('#ingredient-checklist input[type="checkbox"]');
         let addedCount = 0;
         checkboxes.forEach(checkbox => {
@@ -493,6 +544,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (addedCount > 0) {
+            await persistGroceryList();
             const toast = document.getElementById('toast-confirm');
             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 2500);
@@ -502,13 +554,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    const saveRecipe = async (recipe) => {
-        if (!currentUser) { alert("You must be logged in to save recipes!"); return; }
+    const toggleRecipeSaved = async (recipe) => {
+        if (!currentUser) {
+            alert("You must be logged in to save recipes!");
+            return null;
+        }
+
         try {
             const savedCollectionRef = window.collection(db, "users", currentUser.uid, "savedRecipes");
             const snapshot = await window.getDocs(savedCollectionRef);
-            const exists = snapshot.docs.some(docSnap => docSnap.data().name === recipe.name);
-            if (exists) return;
+            const matchingDocs = snapshot.docs.filter(docSnap => docSnap.data().name === recipe.name);
+
+            if (matchingDocs.length > 0) {
+                await Promise.all(matchingDocs.map(docSnap => window.deleteDoc(docSnap.ref)));
+                savedNames.delete(recipe.name);
+                return false;
+            }
+
             await window.addDoc(savedCollectionRef, {
                 name: recipe.name,
                 time: recipe.time,
@@ -518,18 +580,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 imageKeyword: recipe.imageKeyword || "food",
                 savedAt: new Date()
             });
+            savedNames.add(recipe.name);
+            return true;
         } catch (error) {
-            console.error("Error saving recipe to Firestore:", error);
-            alert("Failed to save recipe: " + error.message);
+            console.error("Error updating saved recipe in Firestore:", error);
+            alert("Failed to update saved recipe: " + error.message);
+            return null;
         }
     };
 
     document.getElementById('btn-save-recipe').addEventListener('click', async () => {
         if (!currentActiveRecipe) { alert("No recipe selected."); return; }
-        await saveRecipe(currentActiveRecipe);
-        savedNames.add(currentActiveRecipe.name);
-        document.getElementById('btn-save-recipe').innerText = '❤️';
-        alert("Recipe saved! ❤️");
+        const button = document.getElementById('btn-save-recipe');
+        button.disabled = true;
+        const isSaved = await toggleRecipeSaved(currentActiveRecipe);
+        button.disabled = false;
+        if (isSaved !== null) {
+            button.innerText = isSaved ? '❤️' : '🤍';
+            drawMatchList();
+        }
     });
 
     const fetchAndRenderSavedRecipes = async () => {
@@ -613,19 +682,30 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span>${item.qty}</span>
                         <button type="button" data-act="inc">+</button>
                     </div>
-                    <span class="grocery-row__price">${money(item.costInStore * item.qty)}</span>
+                    <div class="grocery-row__actions">
+                        <span class="grocery-row__price">${money(item.costInStore * item.qty)}</span>
+                        <button class="grocery-row__delete" type="button" data-act="delete" aria-label="Remove ${item.name}" title="Remove item">🗑️</button>
+                    </div>
                 `;
                 row.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
                     currentList[globalIdx].included = e.target.checked;
                     updateGroceryTotals();
+                    persistGroceryList();
                 });
                 row.querySelector('[data-act="dec"]').addEventListener('click', () => {
                     currentList[globalIdx].qty = Math.max(1, currentList[globalIdx].qty - 1);
                     renderGroceryList();
+                    persistGroceryList();
                 });
                 row.querySelector('[data-act="inc"]').addEventListener('click', () => {
                     currentList[globalIdx].qty += 1;
                     renderGroceryList();
+                    persistGroceryList();
+                });
+                row.querySelector('[data-act="delete"]').addEventListener('click', () => {
+                    currentList.splice(globalIdx, 1);
+                    renderGroceryList();
+                    persistGroceryList();
                 });
                 section.appendChild(row);
             });

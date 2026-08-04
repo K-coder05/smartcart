@@ -643,9 +643,16 @@ a { color: inherit; }
 }
 
 .cart-summary__text { flex: 1; }
-.cart-summary__have { margin: 0; font-size: 14px; font-weight: 750; }
+.cart-summary__have { margin: 0 0 8px; font-size: 14px; font-weight: 750; }
+.cart-summary__cost-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 3px;
+}
 .cart-summary__label { margin: 0; font-size: 12px; color: var(--text-muted); }
-.cart-summary__amount { font-size: 18px; font-weight: 800; }
+.cart-summary__amount { flex-shrink: 0; font-size: 15px; font-weight: 800; }
 
 .instructions-card {
   margin-bottom: 22px;
@@ -718,7 +725,7 @@ a { color: inherit; }
 
 .grocery-row {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
   min-height: 54px;
@@ -729,6 +736,23 @@ a { color: inherit; }
 
 .grocery-row__name { font-size: 14px; font-weight: 650; }
 .grocery-row__price { font-size: 14px; font-weight: 700; min-width: 52px; text-align: right; }
+.grocery-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.grocery-row__delete {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+.grocery-row__delete:hover { background: var(--peach); color: var(--navy-950); }
+.grocery-row__delete:focus-visible { outline: 2px solid var(--gold-500); outline-offset: 2px; }
 
 .qty-stepper {
   display: grid;
