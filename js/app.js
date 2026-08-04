@@ -652,7 +652,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span>${item.qty}</span>
                         <button type="button" data-act="inc">+</button>
                     </div>
-                    <span class="grocery-row__price">${money(item.costInStore * item.qty)}</span>
+                    <div class="grocery-row__actions">
+                        <span class="grocery-row__price">${money(item.costInStore * item.qty)}</span>
+                        <button class="grocery-row__delete" type="button" data-act="delete" aria-label="Remove ${item.name}" title="Remove item">🗑️</button>
+                    </div>
                 `;
                 row.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
                     currentList[globalIdx].included = e.target.checked;
@@ -664,6 +667,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
                 row.querySelector('[data-act="inc"]').addEventListener('click', () => {
                     currentList[globalIdx].qty += 1;
+                    renderGroceryList();
+                });
+                row.querySelector('[data-act="delete"]').addEventListener('click', () => {
+                    currentList.splice(globalIdx, 1);
                     renderGroceryList();
                 });
                 section.appendChild(row);

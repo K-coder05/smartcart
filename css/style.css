@@ -725,7 +725,7 @@ a { color: inherit; }
 
 .grocery-row {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
   min-height: 54px;
@@ -736,6 +736,23 @@ a { color: inherit; }
 
 .grocery-row__name { font-size: 14px; font-weight: 650; }
 .grocery-row__price { font-size: 14px; font-weight: 700; min-width: 52px; text-align: right; }
+.grocery-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.grocery-row__delete {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+.grocery-row__delete:hover { background: var(--peach); color: var(--navy-950); }
+.grocery-row__delete:focus-visible { outline: 2px solid var(--gold-500); outline-offset: 2px; }
 
 .qty-stepper {
   display: grid;
