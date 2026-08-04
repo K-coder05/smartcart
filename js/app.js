@@ -126,6 +126,25 @@ const hashPick = (str, arr) => {
 
 document.addEventListener("DOMContentLoaded", () => {
     let savedNames = new Set();
+    let grocerySaveQueue = Promise.resolve();
+
+    const persistGroceryList = () => {
+        if (!currentUser) return Promise.resolve();
+
+        const userId = currentUser.uid;
+        const groceryList = currentList.map(item => ({ ...item }));
+        grocerySaveQueue = grocerySaveQueue
+            .catch(() => {})
+            .then(() => window.setDoc(
+                window.doc(db, "users", userId),
+                { groceryList },
+                { merge: true }
+            ))
+            .catch(error => {
+                console.error("Error saving grocery list:", error);
+            });
+        return grocerySaveQueue;
+    };
 
     const navTo = (viewId) => {
         document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
@@ -166,17 +185,27 @@ document.addEventListener("DOMContentLoaded", () => {
             currentUser = user;
             document.getElementById('account-email').innerText = user.email || "MealMincer member";
             savedNames.clear();
+            currentList = [];
             try {
                 const savedCollectionRef = window.collection(db, "users", user.uid, "savedRecipes");
-                const snapshot = await window.getDocs(savedCollectionRef);
-                snapshot.forEach(docSnap => savedNames.add(docSnap.data().name));
+                const userDocRef = window.doc(db, "users", user.uid);
+                const [savedSnapshot, userSnapshot] = await Promise.all([
+                    window.getDocs(savedCollectionRef),
+                    window.getDoc(userDocRef)
+                ]);
+                savedSnapshot.forEach(docSnap => savedNames.add(docSnap.data().name));
+                const storedList = userSnapshot.exists() ? userSnapshot.data().groceryList : [];
+                currentList = Array.isArray(storedList) ? storedList : [];
             } catch (error) {
-                console.error("Error loading saved recipe state:", error);
+                console.error("Error loading user data:", error);
             }
+            document.getElementById('grocery-cart-badge').innerText = currentList.length || '';
             navTo('view-wizard');
         } else {
             currentUser = null;
             savedNames.clear();
+            currentList = [];
+            document.getElementById('grocery-cart-badge').innerText = '';
             navTo('view-landing');
         }
     });
@@ -492,7 +521,7 @@ document.addEventListener("DOMContentLoaded", () => {
         caret.innerText = body.classList.contains('hidden') ? '⌄' : '⌃';
     });
 
-    document.getElementById('btn-add-grocery').addEventListener('click', () => {
+    document.getElementById('btn-add-grocery').addEventListener('click', async () => {
         const checkboxes = document.querySelectorAll('#ingredient-checklist input[type="checkbox"]');
         let addedCount = 0;
         checkboxes.forEach(checkbox => {
@@ -515,6 +544,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (addedCount > 0) {
+            await persistGroceryList();
             const toast = document.getElementById('toast-confirm');
             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 2500);
@@ -660,18 +690,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 row.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
                     currentList[globalIdx].included = e.target.checked;
                     updateGroceryTotals();
+                    persistGroceryList();
                 });
                 row.querySelector('[data-act="dec"]').addEventListener('click', () => {
                     currentList[globalIdx].qty = Math.max(1, currentList[globalIdx].qty - 1);
                     renderGroceryList();
+                    persistGroceryList();
                 });
                 row.querySelector('[data-act="inc"]').addEventListener('click', () => {
                     currentList[globalIdx].qty += 1;
                     renderGroceryList();
+                    persistGroceryList();
                 });
                 row.querySelector('[data-act="delete"]').addEventListener('click', () => {
                     currentList.splice(globalIdx, 1);
                     renderGroceryList();
+                    persistGroceryList();
                 });
                 section.appendChild(row);
             });
