@@ -643,9 +643,16 @@ a { color: inherit; }
 }
 
 .cart-summary__text { flex: 1; }
-.cart-summary__have { margin: 0; font-size: 14px; font-weight: 750; }
+.cart-summary__have { margin: 0 0 8px; font-size: 14px; font-weight: 750; }
+.cart-summary__cost-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 3px;
+}
 .cart-summary__label { margin: 0; font-size: 12px; color: var(--text-muted); }
-.cart-summary__amount { font-size: 18px; font-weight: 800; }
+.cart-summary__amount { flex-shrink: 0; font-size: 15px; font-weight: 800; }
 
 .instructions-card {
   margin-bottom: 22px;

@@ -385,10 +385,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    const renderIngredients = () => {
+    const renderIngredients = (preserveChecked = false) => {
         const recipe = currentActiveRecipe;
         const scale = currentServings / BASE_SERVINGS;
         const checklistContainer = document.getElementById('ingredient-checklist');
+        const checkedIngredientNames = preserveChecked
+            ? new Set(
+                Array.from(checklistContainer.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map(checkbox => checkbox.dataset.name)
+            )
+            : new Set();
         const fallbackUrl = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=800&q=80';
 
         checklistContainer.innerHTML = `<img src="${recipe.displayImageUrl}"
@@ -405,8 +411,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const label = document.createElement('label');
             label.className = 'ingredient-row';
 
-            const scaledRecipeCost = (ingredient.costInRecipe || 1) * scale;
-            const costInStore = ingredient.costInStore ? ingredient.costInStore : 1.00;
+            const recipeCost = Number(ingredient.costInRecipe) || 0;
+            const scaledRecipeCost = recipeCost * scale;
+            const costInStore = Number(ingredient.costInStore) || 0;
 
             label.innerHTML = `
                 <input type="checkbox" class="chk">
@@ -415,10 +422,12 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
 
             const checkbox = label.querySelector('input');
+            checkbox.checked = checkedIngredientNames.has(ingredient.name);
             checkbox.dataset.name = ingredient.name;
             checkbox.dataset.category = ingredient.category || 'Other';
             checkbox.dataset.quantityInStore = ingredient.quantityInStore;
             checkbox.dataset.costInStore = costInStore;
+            checkbox.dataset.estimatedCost = scaledRecipeCost;
             checkbox.addEventListener('change', updateCartSummary);
 
             checklistContainer.appendChild(label);
@@ -430,17 +439,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const checkboxes = document.querySelectorAll('#ingredient-checklist input[type="checkbox"]');
         let haveCount = 0;
         let addCount = 0;
-        let addTotal = 0;
+        let recipeTotal = 0;
+        let checkoutTotal = 0;
         checkboxes.forEach(cb => {
             if (cb.checked) {
                 haveCount++;
             } else {
                 addCount++;
-                addTotal += parseFloat(cb.dataset.costInStore) || 0;
+                recipeTotal += parseFloat(cb.dataset.estimatedCost) || 0;
+                checkoutTotal += parseFloat(cb.dataset.costInStore) || 0;
             }
         });
         document.getElementById('cart-summary-have').innerText = `You already have ${haveCount} item${haveCount === 1 ? '' : 's'}`;
-        document.getElementById('cart-summary-amount').innerText = money(addTotal);
+        document.getElementById('cart-summary-amount').innerText = money(recipeTotal);
+        document.getElementById('cart-summary-checkout').innerText = money(checkoutTotal);
         document.getElementById('btn-add-grocery').innerText = `Add ${addCount} item${addCount === 1 ? '' : 's'} to Grocery List`;
     };
 
@@ -470,7 +482,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('servings-select').addEventListener('change', (e) => {
         currentServings = parseInt(e.target.value);
-        renderIngredients();
+        renderIngredients(true);
     });
 
     document.getElementById('instructions-toggle').addEventListener('click', () => {
