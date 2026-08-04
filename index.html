@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MealMincer: from cooked to cooking</title>
+    <title>SmartCart: from cooked to cooking</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,19 +11,21 @@
 
         <!-- ===================== LANDING ===================== -->
         <section id="view-landing" class="view hidden">
-            <div class="auth-hero">
-                <div class="auth-blob"></div>
-                <div class="brand">
-                    <span class="brand__mark" aria-hidden="true">🍲</span>
-                    <span>MealMincer</span>
+            <div class="landing-scene">
+                <div class="landing-brand" aria-label="SmartCart">
+                    <img src="public/images/logo.png" alt="" class="landing-brand__logo">
+                    <span>SmartCart</span>
                 </div>
-                <span class="auth-hero__mark" aria-hidden="true">🐻</span>
-                <h1 class="display-title">From cooked to cooking<span class="dot">.</span></h1>
-                <p class="auth-subtitle">Good food, fewer grocery-store guesses.</p>
+                <div class="landing-copy">
+                    <h1 class="display-title">From<br>cooked to<br>cooking<span class="dot">.</span></h1>
+                    <p class="auth-subtitle">Good food, fewer<br>grocery-store guesses.</p>
+                </div>
+                <div class="landing-coral" aria-hidden="true"></div>
+                <img class="landing-bear" src="public/images/bear_plate_transparent.png" alt="SmartCart bear holding a plate">
             </div>
-            <div class="auth-sheet">
+            <div class="landing-actions">
                 <button id="btn-get-started" class="btn-primary">Get started</button>
-                <button id="btn-have-account" class="btn-secondary" style="margin-top:10px;">I have an account</button>
+                <button id="btn-have-account" class="landing-login">I have an account</button>
             </div>
         </section>
 
@@ -75,7 +77,7 @@
                 <button class="auth-back" data-target="view-landing" aria-label="Back">←</button>
                 <div class="brand">
                     <span class="brand__mark" aria-hidden="true">🍲</span>
-                    <span>MealMincer/span>
+                    <span>MealMincer</span>
                 </div>
             </div>
             <div class="auth-sheet">

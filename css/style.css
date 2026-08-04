@@ -65,6 +65,124 @@ a { color: inherit; }
 
 /* ---------- Landing / Sign in / Sign up shared ---------- */
 
+#view-landing {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #edf2e7;
+}
+
+.landing-scene {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.landing-brand {
+  position: absolute;
+  z-index: 3;
+  top: max(48px, calc(env(safe-area-inset-top) + 28px));
+  left: 29px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: #092653;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.landing-brand__logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.landing-copy {
+  position: absolute;
+  z-index: 3;
+  top: max(128px, calc(env(safe-area-inset-top) + 108px));
+  left: 25px;
+}
+
+#view-landing .display-title {
+  margin: 0;
+  color: #092653;
+  font-size: clamp(42px, 11.2vw, 49px);
+  line-height: .98;
+  letter-spacing: -0.045em;
+  font-weight: 800;
+}
+
+#view-landing .auth-subtitle {
+  margin-top: 13px;
+  color: #092653;
+  font-size: 14px;
+  line-height: 1.28;
+  font-weight: 500;
+}
+
+.landing-coral {
+  position: absolute;
+  z-index: 1;
+  top: 34%;
+  left: 11%;
+  width: 128%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ff7e67 12%, #ff6f59 78%);
+}
+
+.landing-bear {
+  position: absolute;
+  z-index: 2;
+  top: 39%;
+  left: 7%;
+  width: 108%;
+  height: auto;
+  object-fit: contain;
+  object-position: top left;
+}
+
+.landing-actions {
+  position: absolute;
+  z-index: 5;
+  right: 21px;
+  bottom: max(36px, calc(env(safe-area-inset-bottom) + 20px));
+  left: 21px;
+  padding: 24px 18px 18px;
+  border: 1px solid rgba(255, 255, 255, .78);
+  border-radius: 23px;
+  background: rgba(255, 252, 246, .96);
+  box-shadow: 0 13px 32px rgba(50, 55, 49, .09);
+  backdrop-filter: blur(8px);
+}
+
+#view-landing .btn-primary {
+  min-height: 52px;
+  border-radius: 999px;
+  background: linear-gradient(105deg, #ffb31c, #ffc13d);
+  box-shadow: 0 10px 22px rgba(255, 177, 23, .22);
+}
+
+.landing-login {
+  display: block;
+  width: 100%;
+  padding: 16px 12px 2px;
+  color: #092653;
+  font-size: 14px;
+  font-weight: 750;
+  text-align: center;
+}
+
+@media (max-height: 690px) {
+  .landing-brand { top: max(28px, calc(env(safe-area-inset-top) + 16px)); }
+  .landing-copy { top: max(101px, calc(env(safe-area-inset-top) + 78px)); }
+  .landing-coral { top: 32%; }
+  .landing-bear { top: 36%; width: 102%; }
+  .landing-actions { bottom: max(18px, env(safe-area-inset-bottom)); }
+}
+
 .auth-hero {
   position: relative;
   min-height: 270px;
