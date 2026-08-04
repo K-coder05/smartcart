@@ -125,6 +125,7 @@ const hashPick = (str, arr) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+    let savedNames = new Set();
 
     const navTo = (viewId) => {
         document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
@@ -160,13 +161,22 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('btn-get-started').addEventListener('click', () => navTo('view-signup'));
     document.getElementById('btn-have-account').addEventListener('click', () => navTo('view-signin'));
 
-    window.onAuthStateChanged(auth, (user) => {
+    window.onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
             document.getElementById('account-email').innerText = user.email || "MealMincer member";
+            savedNames.clear();
+            try {
+                const savedCollectionRef = window.collection(db, "users", user.uid, "savedRecipes");
+                const snapshot = await window.getDocs(savedCollectionRef);
+                snapshot.forEach(docSnap => savedNames.add(docSnap.data().name));
+            } catch (error) {
+                console.error("Error loading saved recipe state:", error);
+            }
             navTo('view-wizard');
         } else {
             currentUser = null;
+            savedNames.clear();
             navTo('view-landing');
         }
     });
@@ -297,8 +307,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     let activeSort = 'best';
-    let savedNames = new Set();
-
     const filteredSortedMatches = () => {
         const q = document.getElementById('match-search').value.trim().toLowerCase();
         let list = currentMatches.filter(r => r.name.toLowerCase().includes(q));
@@ -357,9 +365,11 @@ document.addEventListener("DOMContentLoaded", () => {
             div.querySelector('.match-card__thumb').addEventListener('click', () => openRecipe(recipe));
             div.querySelector('.btn-heart').addEventListener('click', async (e) => {
                 e.stopPropagation();
-                await saveRecipe(recipe);
-                savedNames.add(recipe.name);
-                drawMatchList();
+                const button = e.currentTarget;
+                button.disabled = true;
+                const isSaved = await toggleRecipeSaved(recipe);
+                button.disabled = false;
+                if (isSaved !== null) drawMatchList();
             });
             container.appendChild(div);
         });
@@ -502,13 +512,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    const saveRecipe = async (recipe) => {
-        if (!currentUser) { alert("You must be logged in to save recipes!"); return; }
+    const toggleRecipeSaved = async (recipe) => {
+        if (!currentUser) {
+            alert("You must be logged in to save recipes!");
+            return null;
+        }
+
         try {
             const savedCollectionRef = window.collection(db, "users", currentUser.uid, "savedRecipes");
             const snapshot = await window.getDocs(savedCollectionRef);
-            const exists = snapshot.docs.some(docSnap => docSnap.data().name === recipe.name);
-            if (exists) return;
+            const matchingDocs = snapshot.docs.filter(docSnap => docSnap.data().name === recipe.name);
+
+            if (matchingDocs.length > 0) {
+                await Promise.all(matchingDocs.map(docSnap => window.deleteDoc(docSnap.ref)));
+                savedNames.delete(recipe.name);
+                return false;
+            }
+
             await window.addDoc(savedCollectionRef, {
                 name: recipe.name,
                 time: recipe.time,
@@ -518,18 +538,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 imageKeyword: recipe.imageKeyword || "food",
                 savedAt: new Date()
             });
+            savedNames.add(recipe.name);
+            return true;
         } catch (error) {
-            console.error("Error saving recipe to Firestore:", error);
-            alert("Failed to save recipe: " + error.message);
+            console.error("Error updating saved recipe in Firestore:", error);
+            alert("Failed to update saved recipe: " + error.message);
+            return null;
         }
     };
 
     document.getElementById('btn-save-recipe').addEventListener('click', async () => {
         if (!currentActiveRecipe) { alert("No recipe selected."); return; }
-        await saveRecipe(currentActiveRecipe);
-        savedNames.add(currentActiveRecipe.name);
-        document.getElementById('btn-save-recipe').innerText = '❤️';
-        alert("Recipe saved! ❤️");
+        const button = document.getElementById('btn-save-recipe');
+        button.disabled = true;
+        const isSaved = await toggleRecipeSaved(currentActiveRecipe);
+        button.disabled = false;
+        if (isSaved !== null) {
+            button.innerText = isSaved ? '❤️' : '🤍';
+            drawMatchList();
+        }
     });
 
     const fetchAndRenderSavedRecipes = async () => {
