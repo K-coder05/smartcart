@@ -23,7 +23,7 @@ const CATEGORY_BG = { Produce: "#eaf0e4", Pantry: "#ffe9d1", Dairy: "#e3edf7", P
 const THUMB_BG = ["#ffe0da", "#eaf0e4", "#fff1c9", "#e3edf7", "#f3e3f5"];
 
 let currentUser = null;
-let currentFilters = { mealType: "Lunch", budget: 12, diets: [], allergies: [] };
+let currentFilters = { mealType: "Lunch", budget: 12, priceBasis: "serving", diets: [], allergies: [] };
 let currentMatches = [];
 let currentActiveRecipe = null;
 let currentServings = BASE_SERVINGS;
@@ -36,12 +36,15 @@ const RecipeService = {
     async fetchRecipesFromLLM(filters) {
         const safeAllergies = filters.allergies.length ? filters.allergies.join(", ") : "None";
         const safeDiets = filters.diets.length ? filters.diets.join(", ") : "None";
+        const budgetRule = filters.priceBasis === "store"
+            ? `Each recipe's "totalCostInStore" MUST be less than or equal to $${filters.budget}, the user's maximum upfront store price.`
+            : `Each recipe's "costPerServing" MUST be less than or equal to $${filters.budget}, the user's maximum budget per serving.`;
 
         const prompt = `
         Give me 6 affordable ${filters.mealType} recipes.
 
         CRITICAL RULES FOR GROCERY MATH:
-        Each recipe's "costPerServing" MUST be less than or equal to $${filters.budget}, the user's maximum budget per serving.
+        ${budgetRule}
 
         You must strictly differentiate between recipe quantities and store quantities:
         1. "quantityInStore" & "costInStore": The smallest realistic unit a person can buy at a standard grocery store and its full price (e.g., "1 bottle (16oz)", 4.99).
@@ -321,10 +324,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    document.getElementById('budget-price-basis').addEventListener('change', (e) => {
+        currentFilters.priceBasis = e.target.value;
+        document.getElementById('budget-card-hint').innerText = e.target.value === 'store'
+            ? 'Type any amount — we only show recipes with a total store price at or under it.'
+            : 'Type any amount — we only show recipes with a per-serving price at or under it.';
+    });
+
     document.getElementById('btn-find-recipes').addEventListener('click', async () => {
         const budget = parseFloat(document.getElementById('wizard-budget').value);
-        if (!budget || budget <= 0) { alert("Please enter a valid budget per serving."); return; }
+        if (!budget || budget <= 0) { alert("Please enter a valid budget."); return; }
         currentFilters.budget = budget;
+        currentFilters.priceBasis = document.getElementById('budget-price-basis').value;
 
         document.getElementById('loading-indicator').classList.remove('hidden');
         document.getElementById('btn-find-recipes').disabled = true;
@@ -343,13 +354,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     let activeSort = 'best';
+    const recipeBudgetCost = (recipe) => currentFilters.priceBasis === 'store'
+        ? Number(recipe.totalCostInStore) || 0
+        : Number(recipe.costPerServing) || 0;
+    const recipeBudgetLabel = (recipe) => currentFilters.priceBasis === 'store'
+        ? `${money(recipe.totalCostInStore)} store total`
+        : `${money(recipe.costPerServing)}/serving`;
+
     const filteredSortedMatches = () => {
         const q = document.getElementById('match-search').value.trim().toLowerCase();
         let list = currentMatches.filter(r => r.name.toLowerCase().includes(q));
         if (activeSort === 'time') {
             list = list.slice().sort((a, b) => parseInt(a.time) - parseInt(b.time));
         } else if (activeSort === 'cost') {
-            list = list.slice().sort((a, b) => a.costPerServing - b.costPerServing);
+            list = list.slice().sort((a, b) => recipeBudgetCost(a) - recipeBudgetCost(b));
         } else {
             list = list.slice().sort((a, b) => b._matchPercent - a._matchPercent);
         }
@@ -357,8 +375,11 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const renderMatches = (matches) => {
-        currentMatches = matches.map(r => ({ ...r, _matchPercent: computeMatchPercent(r.costPerServing, currentFilters.budget) }));
-        document.getElementById('matches-count').innerText = `${currentMatches.length} recipes under $${currentFilters.budget}`;
+        currentMatches = matches
+            .filter(r => recipeBudgetCost(r) <= currentFilters.budget)
+            .map(r => ({ ...r, _matchPercent: computeMatchPercent(recipeBudgetCost(r), currentFilters.budget) }));
+        const basisLabel = currentFilters.priceBasis === 'store' ? 'store total' : 'per serving';
+        document.getElementById('matches-count').innerText = `${currentMatches.length} recipes under $${currentFilters.budget} ${basisLabel}`;
         drawMatchList();
     };
 
@@ -392,7 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="match-card__body">
                     <span class="match-badge">⭐ ${recipe._matchPercent}% match</span>
                     <h3 class="match-card__title">${recipe.name}</h3>
-                    <div class="match-card__meta-row"><span>⏱ ${recipe.time}</span><span>$${recipe.costPerServing.toFixed(2)}/serving</span></div>
+                    <div class="match-card__meta-row"><span>⏱ ${recipe.time}</span><span>${recipeBudgetLabel(recipe)}</span></div>
                 </div>
                 <button class="btn-heart ${isSaved ? 'is-saved' : ''}" type="button">${isSaved ? '❤️' : '🤍'}</button>
             `;
@@ -445,11 +466,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const recipeCost = Number(ingredient.costInRecipe) || 0;
             const scaledRecipeCost = recipeCost * scale;
             const costInStore = Number(ingredient.costInStore) || 0;
+            const storePackageCount = costInStore > 0
+                ? Math.max(1, Math.ceil((scaledRecipeCost / costInStore) - Number.EPSILON))
+                : 0;
+            const scaledStoreCost = costInStore * storePackageCount;
 
             label.innerHTML = `
                 <input type="checkbox" class="chk">
                 <span class="ingredient-row__name">${ingredient.name} — ${ingredient.quantityInRecipe}</span>
-                <span class="ingredient-row__price">${money(scaledRecipeCost)}</span>
+                <span class="ingredient-row__quantity">×${storePackageCount}</span>
+                <span class="ingredient-row__price">${money(scaledStoreCost)}</span>
             `;
 
             const checkbox = label.querySelector('input');
@@ -458,6 +484,8 @@ document.addEventListener("DOMContentLoaded", () => {
             checkbox.dataset.category = ingredient.category || 'Other';
             checkbox.dataset.quantityInStore = ingredient.quantityInStore;
             checkbox.dataset.costInStore = costInStore;
+            checkbox.dataset.storePackageCount = storePackageCount;
+            checkbox.dataset.scaledStoreCost = scaledStoreCost;
             checkbox.dataset.estimatedCost = scaledRecipeCost;
             checkbox.addEventListener('change', updateCartSummary);
 
@@ -478,7 +506,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 addCount++;
                 recipeTotal += parseFloat(cb.dataset.estimatedCost) || 0;
-                checkoutTotal += parseFloat(cb.dataset.costInStore) || 0;
+                checkoutTotal += parseFloat(cb.dataset.scaledStoreCost) || 0;
             }
         });
         document.getElementById('cart-summary-have').innerText = `You already have ${haveCount} item${haveCount === 1 ? '' : 's'}`;
@@ -501,7 +529,7 @@ document.addEventListener("DOMContentLoaded", () => {
         photo.onerror = () => { photo.onerror = null; photo.src = RECIPE_IMAGE_FALLBACK; };
         photo.src = recipeImageUrl(recipe);
 
-        const pct = recipe._matchPercent || computeMatchPercent(recipe.costPerServing, currentFilters.budget);
+        const pct = recipe._matchPercent || computeMatchPercent(recipeBudgetCost(recipe), currentFilters.budget);
         document.getElementById('recipe-match-badge').innerText = `⭐ ${pct}% match`;
 
         document.getElementById('instructions-body').innerText = recipe.instructions || "No instructions available for this recipe.";
@@ -533,15 +561,16 @@ document.addEventListener("DOMContentLoaded", () => {
         checkboxes.forEach(checkbox => {
             if (!checkbox.checked) {
                 const existing = currentList.find(i => i.name === checkbox.dataset.name);
+                const packageCount = parseInt(checkbox.dataset.storePackageCount, 10) || 1;
                 if (existing) {
-                    existing.qty += 1;
+                    existing.qty += packageCount;
                 } else {
                     currentList.push({
                         name: checkbox.dataset.name,
                         category: CATEGORY_ORDER.includes(checkbox.dataset.category) ? checkbox.dataset.category : 'Other',
                         quantityInStore: checkbox.dataset.quantityInStore,
                         costInStore: parseFloat(checkbox.dataset.costInStore),
-                        qty: 1,
+                        qty: packageCount,
                         included: true
                     });
                 }
@@ -730,8 +759,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById('weekly-budget-amount').innerText = money(subtotal);
         document.getElementById('weekly-budget-target').innerText = weeklyBudgetTarget.toFixed(0);
-        const pct = Math.min(100, (subtotal / weeklyBudgetTarget) * 100);
-        document.getElementById('budget-progress').style.width = `${pct}%`;
+        const budgetUsagePct = (subtotal / weeklyBudgetTarget) * 100;
+        const progress = document.getElementById('budget-progress');
+        progress.style.width = `${Math.min(100, budgetUsagePct)}%`;
+        progress.classList.toggle('is-warning', budgetUsagePct > 100 && budgetUsagePct <= 120);
+        progress.classList.toggle('is-over-budget', budgetUsagePct > 120);
     };
 
     const budgetInput = document.getElementById('account-budget');

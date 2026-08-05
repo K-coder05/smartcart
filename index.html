@@ -147,15 +147,22 @@
                 </button>
             </div>
 
-            <h3 class="group-label">Budget per serving</h3>
+            <h3 class="group-label">Budget</h3>
             <div class="budget-card">
                 <div class="budget-field">
                     <span class="budget-field__sign" aria-hidden="true">$</span>
-                    <label class="sr-only" for="wizard-budget">Budget per serving in dollars</label>
+                    <label class="sr-only" for="wizard-budget">Budget in dollars</label>
                     <input type="text" inputmode="decimal" id="wizard-budget" placeholder="12" value="12" autocomplete="off">
-                    <span class="budget-field__unit">/ serving</span>
+                    <label class="sr-only" for="budget-price-basis">Budget price type</label>
+                    <span class="budget-basis-select">
+                        <select id="budget-price-basis" aria-label="Budget price type">
+                            <option value="serving" selected>Per serving</option>
+                            <option value="store">Store total</option>
+                        </select>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
+                    </span>
                 </div>
-                <p class="budget-card__hint">Type any amount &mdash; we only show recipes at or under it.</p>
+                <p id="budget-card-hint" class="budget-card__hint">Type any amount &mdash; we only show recipes with a per-serving price at or under it.</p>
             </div>
 
             <h3 class="group-label">Diet preferences</h3>
@@ -259,7 +266,7 @@
                 </div>
 
                 <h3 class="section__title">Ingredients</h3>
-                <p class="helper-text">Check off what you already have.</p>
+                <p class="helper-text">Prices reflect whole store packages. Check off what you already have.</p>
                 <div id="ingredient-checklist"></div>
 
                 <div class="cart-summary">
