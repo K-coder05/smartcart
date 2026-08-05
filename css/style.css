@@ -349,16 +349,10 @@ svg {
 .auth-page__bear {
   position: absolute;
   z-index: 3;
-  top: 195px;
-  right: -50px;
+  top: 180px;
+  right: -20px;
   width: 225px;
   height: auto;
-}
-
-.auth-page--signup .auth-page__bear {
-  top: 207px;
-  right: -10px;
-  width: 225px;
 }
 
 /* ---------- Auth sheet ---------- */
@@ -495,7 +489,7 @@ svg {
   .auth-page__copy { top: 152px; }
   #view-signin .auth-page__copy { top: 142px; }
   .auth-page--signup .auth-page__coral { top: 167px; }
-  .auth-page--signup .auth-page__bear { top: 178px; }
+  .auth-page__bear { top: 178px; }
   .auth-sheet--signup { padding-top: 24px; }
 }
 
@@ -669,7 +663,7 @@ svg {
   background: var(--cream-2);
 }
 
-.budget-field:focus-within { border-color: var(--gold); background: var(--gold-tint); }
+.budget-field:focus-within { border-color: var(--line); background: var(--cream-2); }
 
 .budget-field__sign { font-size: 30px; font-weight: 800; }
 
@@ -687,6 +681,51 @@ svg {
 }
 
 .budget-field__unit { flex-shrink: 0; font-size: 14px; font-weight: 700; color: var(--ink-muted); }
+
+.budget-basis-select {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  border: 2px solid #d9dcdf;
+  border-radius: 999px;
+  background: #fffdfa;
+  color: var(--navy);
+  box-shadow: none;
+}
+
+.budget-basis-select select {
+  min-width: 112px;
+  padding: 10px 32px 10px 13px;
+  border: 0;
+  outline: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.budget-basis-select svg {
+  position: absolute;
+  right: 10px;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.budget-basis-select:focus-within {
+  border-color: #c5c9cd;
+  box-shadow: 0 0 0 2px rgba(16, 39, 68, 0.08);
+}
 
 .budget-card__hint { margin: 0; font-size: 13px; color: var(--ink-muted); }
 
@@ -1028,6 +1067,13 @@ svg {
 .chk:checked::after { opacity: 1; }
 
 .ingredient-row__name { flex: 1; font-weight: 600; }
+.ingredient-row__quantity {
+  min-width: 28px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
 .ingredient-row__price { font-weight: 800; }
 
 .cart-summary {
@@ -1144,7 +1190,15 @@ svg {
   background: var(--cream-2);
 }
 
-.progress__value { height: 100%; border-radius: inherit; background: var(--green); }
+.progress__value {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--green);
+  transition: width 220ms ease, background-color 220ms ease;
+}
+
+.progress__value.is-warning { background: #e89a2f; }
+.progress__value.is-over-budget { background: #d94b45; }
 
 .grocery-budget-card__mark {
   grid-area: bear;
