@@ -15,12 +15,12 @@ const auth = window.getAuth(app);
 const db = window.getFirestore(app);
 
 const BASE_SERVINGS = 4;
-const WEEKLY_BUDGET_TARGET = 40;
+const DEFAULT_WEEKLY_BUDGET = 40;
+let weeklyBudgetTarget = DEFAULT_WEEKLY_BUDGET;
 const CATEGORY_ORDER = ["Produce", "Pantry", "Dairy", "Protein", "Other"];
 const CATEGORY_ICON = { Produce: "🌿", Pantry: "🫙", Dairy: "🥛", Protein: "🍗", Other: "🛒" };
 const CATEGORY_BG = { Produce: "#eaf0e4", Pantry: "#ffe9d1", Dairy: "#e3edf7", Protein: "#fff1c9", Other: "#f0ece2" };
 const THUMB_BG = ["#ffe0da", "#eaf0e4", "#fff1c9", "#e3edf7", "#f3e3f5"];
-const THUMB_EMOJI = ["🍝", "🥗", "🍗", "🍲", "🥪", "🍳", "🌮", "🍜", "🥘", "🍛"];
 
 let currentUser = null;
 let currentFilters = { mealType: "Lunch", budget: 12, diets: [], allergies: [] };
@@ -118,6 +118,16 @@ const computeMatchPercent = (costPerServing, budget) => {
     return Math.max(60, Math.min(99, pct));
 };
 
+const RECIPE_IMAGE_FALLBACK = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=800&q=80';
+
+const recipeImageUrl = (recipe) => {
+    if (recipe.displayImageUrl) return recipe.displayImageUrl;
+    const rawKeyword = recipe.imageKeyword ? recipe.imageKeyword.toLowerCase() : "food";
+    const url = `https://loremflickr.com/400/300/food,${rawKeyword.replace(/\s+/g, ',')}`;
+    recipe.displayImageUrl = url;
+    return url;
+};
+
 const hashPick = (str, arr) => {
     let h = 0;
     for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
@@ -196,16 +206,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 savedSnapshot.forEach(docSnap => savedNames.add(docSnap.data().name));
                 const storedList = userSnapshot.exists() ? userSnapshot.data().groceryList : [];
                 currentList = Array.isArray(storedList) ? storedList : [];
+                const storedBudget = userSnapshot.exists() ? Number(userSnapshot.data().weeklyBudget) : NaN;
+                weeklyBudgetTarget = storedBudget > 0 ? storedBudget : DEFAULT_WEEKLY_BUDGET;
             } catch (error) {
                 console.error("Error loading user data:", error);
             }
-            document.getElementById('grocery-cart-badge').innerText = currentList.length || '';
+            document.getElementById('account-budget').value = String(weeklyBudgetTarget);
             navTo('view-wizard');
         } else {
             currentUser = null;
             savedNames.clear();
             currentList = [];
-            document.getElementById('grocery-cart-badge').innerText = '';
+            weeklyBudgetTarget = DEFAULT_WEEKLY_BUDGET;
             navTo('view-landing');
         }
     });
@@ -256,11 +268,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 showError('signup-error', "Sign up failed: " + error.message);
             }
         }
-    });
-
-    ['btn-google-signin', 'btn-apple-signin', 'btn-google-signup', 'btn-apple-signup'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('click', () => alert("OAuth sign-in isn't wired up in this demo yet — use email/password."));
     });
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
@@ -424,15 +431,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     .map(checkbox => checkbox.dataset.name)
             )
             : new Set();
-        const fallbackUrl = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=800&q=80';
-
-        checklistContainer.innerHTML = `<img src="${recipe.displayImageUrl}"
-                                        alt="${recipe.name}"
-                                        onerror="this.onerror=null; this.src='${fallbackUrl}';"
-                                        style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px; margin-bottom: 20px;">`;
+        checklistContainer.innerHTML = '';
 
         if (!recipe.ingredients || recipe.ingredients.length === 0) {
-            checklistContainer.innerHTML += '<p>No ingredients found.</p>';
+            checklistContainer.innerHTML = '<p>No ingredients found.</p>';
             return;
         }
 
@@ -492,8 +494,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById('recipe-title').innerText = recipe.name;
         document.getElementById('recipe-meta').innerText = `${recipe.time} · $${recipe.costPerServing.toFixed(2)} per serving`;
-        document.getElementById('recipe-thumb').innerText = hashPick(recipe.name, THUMB_EMOJI);
-        document.getElementById('recipe-thumb').style.background = hashPick(recipe.name, THUMB_BG);
+        const thumb = document.getElementById('recipe-thumb');
+        thumb.style.background = hashPick(recipe.name, THUMB_BG);
+        const photo = document.getElementById('recipe-photo');
+        photo.alt = recipe.name;
+        photo.onerror = () => { photo.onerror = null; photo.src = RECIPE_IMAGE_FALLBACK; };
+        photo.src = recipeImageUrl(recipe);
 
         const pct = recipe._matchPercent || computeMatchPercent(recipe.costPerServing, currentFilters.budget);
         document.getElementById('recipe-match-badge').innerText = `⭐ ${pct}% match`;
@@ -548,7 +554,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const toast = document.getElementById('toast-confirm');
             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 2500);
-            document.getElementById('grocery-cart-badge').innerText = currentList.length;
         } else {
             alert("No ingredients to add!");
         }
@@ -660,7 +665,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const renderGroceryList = () => {
         const container = document.getElementById('grocery-items');
         container.innerHTML = '';
-        document.getElementById('grocery-cart-badge').innerText = currentList.length;
 
         CATEGORY_ORDER.forEach(cat => {
             const items = currentList.filter(i => i.category === cat);
@@ -725,13 +729,37 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('grocery-total').innerText = money(total);
 
         document.getElementById('weekly-budget-amount').innerText = money(subtotal);
-        document.getElementById('weekly-budget-target').innerText = WEEKLY_BUDGET_TARGET.toFixed(0);
-        const pct = Math.min(100, (subtotal / WEEKLY_BUDGET_TARGET) * 100);
+        document.getElementById('weekly-budget-target').innerText = weeklyBudgetTarget.toFixed(0);
+        const pct = Math.min(100, (subtotal / weeklyBudgetTarget) * 100);
         document.getElementById('budget-progress').style.width = `${pct}%`;
     };
 
-    document.getElementById('btn-review-order').addEventListener('click', () => {
-        alert("This is a demo — checkout isn't connected to a real store yet!");
+    const budgetInput = document.getElementById('account-budget');
+    const budgetNote = document.getElementById('budget-saved-note');
+
+    document.getElementById('btn-save-budget').addEventListener('click', async () => {
+        const value = parseFloat(budgetInput.value);
+        if (!value || value <= 0) {
+            alert("Please enter a weekly budget greater than $0.");
+            return;
+        }
+        weeklyBudgetTarget = Math.round(value * 100) / 100;
+        budgetInput.value = String(weeklyBudgetTarget);
+
+        if (currentUser) {
+            try {
+                await window.setDoc(
+                    window.doc(db, "users", currentUser.uid),
+                    { weeklyBudget: weeklyBudgetTarget },
+                    { merge: true }
+                );
+            } catch (error) {
+                console.error("Error saving weekly budget:", error);
+            }
+        }
+
+        budgetNote.classList.remove('hidden');
+        setTimeout(() => budgetNote.classList.add('hidden'), 2200);
     });
 
     renderAllergyTags();
