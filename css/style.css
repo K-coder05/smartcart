@@ -126,7 +126,7 @@ a { color: inherit; }
   position: absolute;
   z-index: 1;
   top: 34%;
-  left: 11%;
+  left: 18%;
   width: 128%;
   aspect-ratio: 1;
   border-radius: 50%;
@@ -136,8 +136,8 @@ a { color: inherit; }
 .landing-bear {
   position: absolute;
   z-index: 2;
-  top: 39%;
-  left: 7%;
+  top: 34%;
+  left: 3%;
   width: 108%;
   height: auto;
   object-fit: contain;
