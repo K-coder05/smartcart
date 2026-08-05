@@ -183,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
-            document.getElementById('account-email').innerText = user.email || "MealMincer member";
+            document.getElementById('account-email').innerText = user.email || "SmartCart member";
             savedNames.clear();
             currentList = [];
             try {
