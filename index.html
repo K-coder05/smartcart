@@ -30,92 +30,92 @@
         </section>
 
         <!-- ===================== SIGN IN ===================== -->
-        <section id="view-signin" class="view hidden">
-            <div class="auth-hero" style="min-height:140px;">
+        <section id="view-signin" class="view auth-page hidden">
+            <div class="auth-page__hero">
                 <button class="auth-back" data-target="view-landing" aria-label="Back">←</button>
-                <div class="brand">
-                    <span class="brand__mark" aria-hidden="true">🍲</span>
-                    <span>MealMincer</span>
+                <div class="auth-brand">
+                    <img src="public/images/logo.png" alt="" class="auth-brand__logo">
+                    <span>SmartCart</span>
                 </div>
+                <div class="auth-page__copy">
+                    <h1>Welcome<br>back</h1>
+                    <p>Your next good meal is waiting.</p>
+                </div>
+                <div class="auth-page__coral" aria-hidden="true"></div>
+                <img class="auth-page__bear" src="public/images/bear_wave_transparent.png" alt="SmartCart bear waving">
             </div>
-            <div class="auth-sheet">
-                <h2 class="view-title" style="font-size:28px;">Welcome back</h2>
-                <p class="view-subtitle" style="margin-bottom:20px;">Sign in to pick up where you left off.</p>
-
+            <div class="auth-sheet auth-sheet--signin">
                 <div id="signin-error" class="error-text hidden">Incorrect email or password.</div>
-
                 <form id="signin-form">
                     <div class="field">
                         <label class="field__label" for="signin-email">Email</label>
                         <div class="field-input">
-                            <input type="email" id="signin-email" placeholder="you@example.com" required>
+                            <input type="email" id="signin-email" placeholder="Email" required>
                         </div>
                     </div>
                     <div class="field">
                         <label class="field__label" for="signin-password">Password</label>
                         <div class="field-input">
-                            <input type="password" id="signin-password" placeholder="••••••••" required>
+                            <input type="password" id="signin-password" placeholder="Password" required>
+                            <span class="password-eye" aria-hidden="true"></span>
                         </div>
                     </div>
-                    <button type="submit" class="btn-primary">Log in</button>
+                    <button type="button" class="forgot-password">Forgot password?</button>
+                    <button type="submit" class="btn-primary">Sign in</button>
                 </form>
-
-                <div class="divider">or</div>
-
-                <div class="oauth-row">
-                    <button id="btn-google-signin" class="btn-oauth"><span class="oauth-icon">🔍</span> Google</button>
-                    <button id="btn-apple-signin" class="btn-oauth"><span class="oauth-icon">🍎</span> Apple</button>
+                <div class="divider">or continue with</div>
+                <div class="oauth-row oauth-row--stacked">
+                    <button id="btn-google-signin" class="btn-oauth"><span class="google-mark">G</span> Google</button>
+                    <button id="btn-apple-signin" class="btn-oauth"><span class="apple-mark"></span> Apple</button>
                 </div>
-
-                <p class="auth-switch">Don't have an account? <button type="button" data-target="view-signup">Sign up</button></p>
             </div>
+            <p class="auth-switch auth-switch--outside">New to SmartCart? <button type="button" data-target="view-signup">Create an account</button></p>
         </section>
 
         <!-- ===================== SIGN UP ===================== -->
-        <section id="view-signup" class="view hidden">
-            <div class="auth-hero" style="min-height:140px;">
+        <section id="view-signup" class="view auth-page auth-page--signup hidden">
+            <div class="auth-page__hero">
                 <button class="auth-back" data-target="view-landing" aria-label="Back">←</button>
-                <div class="brand">
-                    <span class="brand__mark" aria-hidden="true">🍲</span>
-                    <span>MealMincer</span>
+                <div class="auth-brand">
+                    <img src="public/images/logo.png" alt="" class="auth-brand__logo">
+                    <span>SmartCart</span>
                 </div>
+                <div class="auth-page__copy">
+                    <h1>Let’s get<br>cooking<span>.</span></h1>
+                    <p>Create your account and<br>find meals that fit your life.</p>
+                </div>
+                <div class="auth-page__coral" aria-hidden="true"></div>
+                <img class="auth-page__bear" src="public/images/bear_wave_transparent.png" alt="SmartCart bear waving">
             </div>
-            <div class="auth-sheet">
-                <h2 class="view-title" style="font-size:28px;">Create your account</h2>
-                <p class="view-subtitle" style="margin-bottom:20px;">Budget-friendly recipes, matched to you.</p>
-
+            <div class="auth-sheet auth-sheet--signup">
                 <div id="signup-error" class="error-text hidden">Please check your details.</div>
-
                 <form id="signup-form">
                     <div class="field">
                         <label class="field__label" for="signup-name">Name</label>
                         <div class="field-input">
-                            <input type="text" id="signup-name" placeholder="Your name">
+                            <input type="text" id="signup-name" placeholder="Name">
                         </div>
                     </div>
                     <div class="field">
                         <label class="field__label" for="signup-email">Email</label>
                         <div class="field-input">
-                            <input type="email" id="signup-email" placeholder="you@example.com" required>
+                            <input type="email" id="signup-email" placeholder="Email" required>
                         </div>
                     </div>
                     <div class="field">
                         <label class="field__label" for="signup-password">Password</label>
                         <div class="field-input">
-                            <input type="password" id="signup-password" placeholder="At least 6 characters" required>
+                            <input type="password" id="signup-password" placeholder="Password" required>
                         </div>
                     </div>
-                    <button type="submit" class="btn-primary">Sign up</button>
+                    <button type="submit" class="btn-primary">Create account</button>
                 </form>
-
-                <div class="divider">or</div>
-
+                <div class="divider">or sign up with</div>
                 <div class="oauth-row">
-                    <button id="btn-google-signup" class="btn-oauth"><span class="oauth-icon">🔍</span> Google</button>
-                    <button id="btn-apple-signup" class="btn-oauth"><span class="oauth-icon">🍎</span> Apple</button>
+                    <button id="btn-google-signup" class="btn-oauth"><span class="google-mark">G</span> Google</button>
+                    <button id="btn-apple-signup" class="btn-oauth"><span class="apple-mark"></span> Apple</button>
                 </div>
-
-                <p class="auth-switch">Already have an account? <button type="button" data-target="view-signin">Log in</button></p>
+                <p class="auth-switch">Already have an account? <button type="button" data-target="view-signin">Sign in</button></p>
             </div>
         </section>
 
