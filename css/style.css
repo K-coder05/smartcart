@@ -1393,8 +1393,8 @@ svg {
   transform: translateX(-50%);
   padding: 12px 20px;
   border-radius: 999px;
-  background: var(--navy);
-  color: var(--cream);
+  background: var(--cream);
+  color: var(--navy);
   font-size: 14px;
   font-weight: 700;
   box-shadow: var(--shadow-md);
