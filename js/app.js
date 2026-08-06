@@ -203,21 +203,22 @@ document.addEventListener("DOMContentLoaded", () => {
             savedNames.clear();
             currentList = [];
             try {
-                const storedStore = userSnapshot.exists() && userSnapshot.data().preferredStore ? userSnapshot.data().preferredStore : DEFAULT_STORE;
-                preferredStore = storedStore;
-                document.getElementById('account-store').value = preferredStore;
-                currentFilters.store = preferredStore;
-
 				const savedCollectionRef = window.collection(db, "users", user.uid, "savedRecipes");
                 const userDocRef = window.doc(db, "users", user.uid);
                 const [savedSnapshot, userSnapshot] = await Promise.all([
                     window.getDocs(savedCollectionRef),
                     window.getDoc(userDocRef)
                 ]);
+
+                const userData = userSnapshot.exists() ? userSnapshot.data() : {};
+                preferredStore = userData.preferredStore || DEFAULT_STORE;
+                document.getElementById('account-store').value = preferredStore;
+                currentFilters.store = preferredStore;
+
                 savedSnapshot.forEach(docSnap => savedNames.add(docSnap.data().name));
-                const storedList = userSnapshot.exists() ? userSnapshot.data().groceryList : [];
+                const storedList = userData.groceryList || [];
                 currentList = Array.isArray(storedList) ? storedList : [];
-                const storedBudget = userSnapshot.exists() ? Number(userSnapshot.data().weeklyBudget) : NaN;
+                const storedBudget = Number(userData.weeklyBudget);
                 weeklyBudgetTarget = storedBudget > 0 ? storedBudget : DEFAULT_WEEKLY_BUDGET;
             } catch (error) {
                 console.error("Error loading user data:", error);
@@ -246,6 +247,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const password = document.getElementById('signin-password').value;
         try {
             await window.signInWithEmailAndPassword(auth, email, password);
+            document.getElementById('signin-password').value = '';
+            navTo('view-wizard');
         } catch (error) {
             console.error("Sign in error:", error.code, error.message);
             if (['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found'].includes(error.code)) {
