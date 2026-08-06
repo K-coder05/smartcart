@@ -1327,13 +1327,13 @@ svg {
 
 .settings-card__saved { margin: 0; font-size: 13px; font-weight: 700; color: var(--green); }
 
-.settings-card__mark {
+/* .settings-card__mark {
   position: absolute;
   top: 12px;
   right: 10px;
   width: 96px;
   height: auto;
-}
+} */
 
 .settings-card .budget-field { min-height: 66px; }
 .settings-card .budget-field input { font-size: 34px; }
@@ -1443,4 +1443,24 @@ svg {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.store-field {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 18px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--cream-2);
+  margin-bottom: 12px;
+}
+.store-field select {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
 }

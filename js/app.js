@@ -21,14 +21,16 @@ const CATEGORY_ORDER = ["Produce", "Pantry", "Dairy", "Protein", "Other"];
 const CATEGORY_ICON = { Produce: "🌿", Pantry: "🫙", Dairy: "🥛", Protein: "🍗", Other: "🛒" };
 const CATEGORY_BG = { Produce: "#eaf0e4", Pantry: "#ffe9d1", Dairy: "#e3edf7", Protein: "#fff1c9", Other: "#f0ece2" };
 const THUMB_BG = ["#ffe0da", "#eaf0e4", "#fff1c9", "#e3edf7", "#f3e3f5"];
+const DEFAULT_STORE = "Target";
 
 let currentUser = null;
-let currentFilters = { mealType: "Lunch", budget: 12, priceBasis: "serving", diets: [], allergies: [] };
+let currentFilters = { mealType: "Lunch", budget: 12, priceBasis: "serving", diets: [], allergies: [], store: DEFAULT_STORE };
 let currentMatches = [];
 let currentActiveRecipe = null;
 let currentServings = BASE_SERVINGS;
 let currentList = [];
 let lastMainTab = "view-wizard";
+let preferredStore = DEFAULT_STORE;
 
 const RecipeService = {
     ai: new GoogleGenAI({ apiKey: GEMINI_API_KEY }),
@@ -44,7 +46,8 @@ const RecipeService = {
         Give me 6 affordable ${filters.mealType} recipes.
 
         CRITICAL RULES FOR GROCERY MATH:
-        ${budgetRule}
+        The user is shopping at ${filters.store}. You MUST estimate ingredient prices and package sizes based on typical inventory and pricing at ${filters.store}.
+		${budgetRule}
 
         You must strictly differentiate between recipe quantities and store quantities:
         1. "quantityInStore" & "costInStore": The smallest realistic unit a person can buy at a standard grocery store and its full price (e.g., "1 bottle (16oz)", 4.99).
@@ -200,7 +203,12 @@ document.addEventListener("DOMContentLoaded", () => {
             savedNames.clear();
             currentList = [];
             try {
-                const savedCollectionRef = window.collection(db, "users", user.uid, "savedRecipes");
+                const storedStore = userSnapshot.exists() && userSnapshot.data().preferredStore ? userSnapshot.data().preferredStore : DEFAULT_STORE;
+                preferredStore = storedStore;
+                document.getElementById('account-store').value = preferredStore;
+                currentFilters.store = preferredStore;
+
+				const savedCollectionRef = window.collection(db, "users", user.uid, "savedRecipes");
                 const userDocRef = window.doc(db, "users", user.uid);
                 const [savedSnapshot, userSnapshot] = await Promise.all([
                     window.getDocs(savedCollectionRef),
@@ -794,5 +802,28 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => budgetNote.classList.add('hidden'), 2200);
     });
 
-    renderAllergyTags();
+    const storeInput = document.getElementById('account-store');
+    const storeNote = document.getElementById('store-saved-note');
+
+    document.getElementById('btn-save-store').addEventListener('click', async () => {
+        preferredStore = storeInput.value;
+        currentFilters.store = preferredStore;
+
+        if (currentUser) {
+            try {
+                await window.setDoc(
+                    window.doc(db, "users", currentUser.uid),
+                    { preferredStore: preferredStore },
+                    { merge: true }
+                );
+            } catch (error) {
+                console.error("Error saving preferred store:", error);
+            }
+        }
+
+        storeNote.classList.remove('hidden');
+        setTimeout(() => storeNote.classList.add('hidden'), 2200);
+    });
+
+	renderAllergyTags();
 });

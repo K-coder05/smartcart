@@ -372,8 +372,17 @@
                 </div>
                 <button id="btn-save-budget" class="btn-primary">Save budget</button>
                 <p id="budget-saved-note" class="settings-card__saved hidden">Budget updated.</p>
-                <img class="settings-card__mark" src="public/images/bear_thumbs_up.png" alt="">
-            </div>
+				</div>
+				<div class="store-field">
+					<label class="sr-only" for="account-store">Grocery store</label>
+					<select id="account-store">
+						<option value="Target">Target</option>
+						<option value="Safeway">Safeway</option>
+						<option value="Trader Joe's">Trader Joe's</option>
+					</select>
+				</div>
+				<button id="btn-save-store" class="btn-primary">Save store</button>
+				<p id="store-saved-note" class="settings-card__saved hidden">Store updated.</p>
 
             <button id="logout-btn" class="btn-secondary btn-secondary--block">Log out</button>
         </section>
