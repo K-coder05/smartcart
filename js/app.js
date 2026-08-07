@@ -1,4 +1,7 @@
 import { GoogleGenAI } from 'https://cdn.jsdelivr.net/npm/@google/genai@2.12.0/+esm';
+// IF YOU ARE RUNNING THIS LOCALLY, YOU MUST MAKE A NEW config.js FILE IN THE js DIRECTORY
+// GO TO GOOGLE AI STUDIO TO GET YOUR OWN API KEY AND THEN COPY THIS DOWN TO YOUR FILE EXACTLY:
+// export const GEMINI_API_KEY = "API-KEY-FROM-GOOGLE-AI-STUDIOS"
 import { GEMINI_API_KEY } from './config.js';
 
 const firebaseConfig = {
