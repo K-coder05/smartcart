@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf8f1">
+  <meta name="description" content="SmartCart UX case study — from grocery stress to smarter cooking.">
+  <title>SmartCart — UX Case Study</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header" id="top">
+    <div class="nav-shell">
+      <a class="brand" href="#overview" aria-label="SmartCart case study home">
+        <img src="../public/images/logo.png" alt="">
+        <span>SmartCart</span>
+      </a>
+      <button class="menu-button" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span class="sr-only">Toggle navigation</span><i></i><i></i><i></i>
+      </button>
+      <nav id="site-nav" aria-label="Case study sections">
+        <a href="#overview">Overview</a><a href="#problem">Problem</a><a href="#research">Research</a>
+        <a href="#design">Design</a><a href="#testing">Testing</a><a href="#iterations">Iterations</a>
+        <a href="#final-design">Final Design</a><a href="#team">Team</a>
+      </nav>
+      <a class="button button--small nav-cta" href="#prototype">View Prototype <span>↗</span></a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero section" id="overview">
+      <div class="hero-copy reveal">
+        <p class="eyebrow">UX CASE STUDY <b>·</b> SMARTCART</p>
+        <h1>From grocery stress<br>to smarter cooking<span>.</span></h1>
+        <p class="hero-lead">SmartCart helps users discover recipes based on their budget, dietary preferences, and lifestyle while simplifying grocery planning.</p>
+        <div class="hero-actions"><a class="button" href="#prototype">View Prototype</a><a class="button button--ghost" href="https://github.com/K-coder05/smartcart" target="_blank" rel="noreferrer">View GitHub ↗</a></div>
+        <dl class="metadata">
+          <div><dt>Course</dt><dd>CS160</dd></div><div><dt>Project</dt><dd>SmartCart</dd></div>
+          <div><dt>Role</dt><dd>User Research · Testing · Product Design</dd></div><div><dt>Platform</dt><dd>Mobile Web Prototype</dd></div>
+        </dl>
+      </div>
+      <div class="hero-visual reveal" aria-label="Three SmartCart mobile interface previews">
+        <div class="shape shape--sage"></div><div class="shape shape--coral"></div><div class="shape shape--yellow"></div>
+        <div class="phone phone--home">
+          <div class="phone-bar"></div><div class="mini-brand"><img src="../public/images/logo.png" alt="">SmartCart</div>
+          <h3>From cooked<br>to cooking<span>.</span></h3><p>Good food, fewer<br>grocery-store guesses.</p>
+          <div class="mini-illustration coral"><img src="../public/images/bear_plate_transparent.png" alt=""></div><div class="landing-sheet"><span class="mini-button">Get started</span><small>I have an account</small></div>
+        </div>
+        <div class="phone phone--filters">
+          <div class="phone-bar"></div><small>←</small><h4>Find Your Match</h4><h3>What sounds good?</h3><p>We'll use these picks to find recipes that fit.</p>
+          <label>Meal type</label><div class="chip-row"><span>Breakfast</span><span>Lunch</span><span class="active">Dinner</span><span>Snack</span></div>
+          <label>Budget</label><div class="budget-shell"><div class="mini-field">$ <strong>12</strong><em>Per serving⌄</em></div><small>Type any amount — we only show recipes at or under it.</small></div><label>Diet preferences</label>
+          <div class="chip-row"><span>Vegetarian</span><span class="active">Vegan</span><span>High protein</span><span>Gluten-free</span></div><div class="mock-bottom"><b>⌕<small>Discover</small></b><b>♡<small>Saved</small></b><b>⌑<small>Grocery List</small></b><b>♙<small>Account</small></b></div>
+        </div>
+        <div class="phone phone--matches">
+          <div class="phone-bar"></div><h3>Your matches</h3><p>6 recipes under $12 per serving</p><div class="mini-search">⌕ &nbsp; Search matches</div><div class="match-sorts"><span>Best match</span><span>Under 30 min</span><span>Lowest cost</span></div>
+          <div class="mini-recipe"><span class="food-thumb food-one"></span><i>★ 68% match</i><b>Chickpea Coconut Curry</b><small>◷ 25 minutes<br>$3.10/serving</small><em>♥</em></div>
+          <div class="mini-recipe green"><span class="food-thumb food-two"></span><i>★ 68% match</i><b>Peanut Noodle Stir-fry</b><small>◷ 20 minutes<br>$2.90/serving</small><em>♥</em></div>
+          <div class="mini-recipe yellow"><span class="food-thumb food-three"></span><i>★ 67% match</i><b>Black Bean Tacos</b><small>◷ 20 minutes<br>$2.80/serving</small><em>♡</em></div><div class="mock-bottom"><b>⌕<small>Discover</small></b><b>♡<small>Saved</small></b><b>⌑<small>Grocery List</small></b><b>♙<small>Account</small></b></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="problem">
+      <div class="section-heading reveal"><p class="eyebrow">01 / THE PROBLEM</p><h2>Dinner shouldn’t require<br>this much decision-making.</h2><p>Students and young adults often want to cook more, but deciding what to make can become difficult when they also need to consider cost, dietary needs, time, and grocery planning.</p></div>
+      <div class="card-grid four reveal">
+        <article class="icon-card"><span class="icon">$</span><h3>Budget Constraints</h3><p>Users want meals that fit realistic spending limits.</p></article>
+        <article class="icon-card"><span class="icon sage">♡</span><h3>Dietary Preferences</h3><p>Vegetarian, vegan, allergy, and protein preferences affect recipe choices.</p></article>
+        <article class="icon-card"><span class="icon coral">↻</span><h3>Decision Fatigue</h3><p>Choosing what to cook every day can become mentally exhausting.</p></article>
+        <article class="icon-card"><span class="icon navy">⌑</span><h3>Grocery Planning</h3><p>Finding a recipe is only one part of the task—users still need to shop.</p></article>
+      </div>
+    </section>
+
+    <section class="section section--sage" id="research">
+      <div class="section-heading reveal"><p class="eyebrow">02 / RESEARCH</p><h2>Understanding how people<br>decide what to cook.</h2></div>
+      <div class="split-cards reveal">
+        <article class="feature-panel"><span class="panel-number">01</span><h3>Who are we designing for?</h3><ul class="check-list"><li>College students</li><li>Young adults living independently</li><li>People with limited grocery budgets</li><li>Users with dietary preferences or restrictions</li><li>Users who want fast meal-planning decisions</li></ul></article>
+        <article class="feature-panel feature-panel--yellow"><span class="panel-number">02</span><h3>How we learned</h3><div class="method-list"><span>User interviews</span><span>Needfinding</span><span>Observation</span><span>Competitive analysis</span><span>Prototype testing</span></div><img src="../public/images/bear_pointing.png" alt="SmartCart bear pointing to the research methods"></article>
+      </div>
+      <div class="subheading reveal"><span>Key insights</span><h3>What we heard changed what we built.</h3></div>
+      <div class="insight-grid reveal">
+        <article><b>01</b><h3>Users want fewer choices, not more choices.</h3><p>Too many recipe options can create additional decision fatigue.</p></article>
+        <article><b>02</b><h3>Budget matters at the moment of choosing.</h3><p>Users want cost information directly connected to recipe recommendations.</p></article>
+        <article><b>03</b><h3>Filters need to reflect real dietary behavior.</h3><p>Users asked for vegetarian, vegan, allergy, high protein, and no red meat options.</p></article>
+      </div>
+    </section>
+
+    <section class="section" id="design">
+      <div class="section-heading reveal"><p class="eyebrow">03 / OUR PROCESS</p><h2>From research to a<br>working prototype.</h2></div>
+      <ol class="timeline reveal">
+        <li><b>01</b><h3>Needfinding</h3><p>We explored how students currently choose meals and shop.</p></li>
+        <li><b>02</b><h3>Ideation</h3><p>We translated user pain points into multiple product concepts.</p></li>
+        <li><b>03</b><h3>Prototype</h3><p>We built an interactive experience focused on discovery.</p></li>
+        <li><b>04</b><h3>User Testing</h3><p>We observed users completing realistic planning tasks.</p></li>
+        <li><b>05</b><h3>Iteration</h3><p>We refined feedback, instructions, and hierarchy.</p></li>
+        <li><b>06</b><h3>Final Design</h3><p>We joined matching, saving, and planning in one flow.</p></li>
+      </ol>
+    </section>
+
+    <section class="section section--cream" id="ideation">
+      <div class="section-heading reveal"><p class="eyebrow">04 / IDEATION</p><h2>Turning user needs into<br>product decisions.</h2></div>
+      <div class="ideation-grid reveal">
+        <div class="wireframe" aria-label="Early SmartCart wireframe placeholder">
+          <!-- Replace this CSS wireframe with an image of your early sketches if available. -->
+          <div class="sketch-phone"><i></i><strong>What sounds good?</strong><span class="sketch-label"></span><div class="sketch-pills"><b></b><b></b><b></b></div><span class="sketch-label short"></span><div class="sketch-box"></div><div class="sketch-button"></div></div>
+          <div class="sketch-phone tilted"><i></i><strong>Your matches</strong><div class="sketch-card"></div><div class="sketch-card"></div><div class="sketch-card"></div></div>
+          <span class="scribble">less browsing!</span><span class="arrow">↗</span>
+        </div>
+        <div><p class="eyebrow">DESIGN GOALS</p><ul class="goal-list"><li>Make choosing dinner faster</li><li>Support realistic dietary preferences</li><li>Make price visible</li><li>Reduce unnecessary steps</li><li>Connect recipes to grocery planning</li></ul><blockquote>“Instead of asking users to browse hundreds of recipes, SmartCart should narrow the decision for them.”</blockquote></div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="section-heading reveal"><p class="eyebrow">05 / CORE FEATURES</p><h2>One flow, from deciding<br>to shopping.</h2></div>
+      <div class="feature-grid reveal">
+        <article><div class="feature-copy"><span>01</span><h3>Recipe Matching</h3><p>Recipes are ranked based on user-selected preferences.</p></div><div class="ui-preview matches"><div><b>94% match</b><span>Golden veggie bowl</span><small>25 min · $4.80</small></div><div><b>91% match</b><span>Lemon pesto pasta</span><small>20 min · $3.90</small></div></div></article>
+        <article><div class="feature-copy"><span>02</span><h3>Budget Filtering</h3><p>Users can specify a per-serving budget before viewing recommendations.</p></div><div class="ui-preview budget"><small>YOUR BUDGET</small><strong>$12</strong><span>per serving</span><div><i></i></div></div></article>
+        <article><div class="feature-copy"><span>03</span><h3>Saved Recipes</h3><p>Favorite meals can be saved and revisited later.</p></div><div class="ui-preview saved"><span>♥</span><b>Cozy chickpea curry</b><small>Saved to your recipes</small></div></article>
+        <article><div class="feature-copy"><span>04</span><h3>Grocery List</h3><p>Ingredients from selected recipes can be organized into a grocery list.</p></div><div class="ui-preview grocery"><label><i>✓</i> Baby spinach <b>$2.49</b></label><label><i></i> Chickpeas <b>$1.29</b></label><label><i></i> Brown rice <b>$3.19</b></label></div></article>
+      </div>
+    </section>
+
+    <section class="section prototype-section" id="prototype">
+      <div class="section-heading reveal"><p class="eyebrow">06 / PROTOTYPE</p><h2>From concept to<br>interactive experience.</h2></div>
+      <div class="prototype-phones reveal">
+        <div class="phone phone--large phone--home"><div class="phone-bar"></div><div class="mini-brand"><img src="../public/images/logo.png" alt="">SmartCart</div><h3>From cooked<br>to cooking<span>.</span></h3><p>Good food, fewer<br>grocery-store guesses.</p><div class="mini-illustration coral"><img src="../public/images/bear_plate_transparent.png" alt=""></div><div class="landing-sheet"><span class="mini-button">Get started</span><small>I have an account</small></div></div>
+        <div class="phone phone--large phone--filters"><div class="phone-bar"></div><small>←</small><h4>Find Your Match</h4><h3>What sounds good?</h3><p>We'll use these picks to find recipes that fit.</p><label>Meal type</label><div class="chip-row"><span>Breakfast</span><span>Lunch</span><span class="active">Dinner</span><span>Snack</span></div><label>Budget</label><div class="budget-shell"><div class="mini-field">$ <strong>12</strong><em>Per serving⌄</em></div><small>Type any amount — we only show recipes at or under it.</small></div><label>Diet preferences</label><div class="chip-row"><span>Vegetarian</span><span class="active">Vegan</span><span>High protein</span><span>Gluten-free</span></div><div class="mock-bottom"><b>⌕<small>Discover</small></b><b>♡<small>Saved</small></b><b>⌑<small>Grocery List</small></b><b>♙<small>Account</small></b></div></div>
+        <div class="phone phone--large phone--matches"><div class="phone-bar"></div><h3>Your matches</h3><p>6 recipes under $12 per serving</p><div class="mini-search">⌕ &nbsp; Search matches</div><div class="match-sorts"><span>Best match</span><span>Under 30 min</span><span>Lowest cost</span></div><div class="mini-recipe"><span class="food-thumb food-one"></span><i>★ 68% match</i><b>Chickpea Coconut Curry</b><small>◷ 25 minutes<br>$3.10/serving</small><em>♥</em></div><div class="mini-recipe green"><span class="food-thumb food-two"></span><i>★ 68% match</i><b>Peanut Noodle Stir-fry</b><small>◷ 20 minutes<br>$2.90/serving</small><em>♥</em></div><div class="mini-recipe yellow"><span class="food-thumb food-three"></span><i>★ 67% match</i><b>Black Bean Tacos</b><small>◷ 20 minutes<br>$2.80/serving</small><em>♡</em></div><div class="mock-bottom"><b>⌕<small>Discover</small></b><b>♡<small>Saved</small></b><b>⌑<small>Grocery List</small></b><b>♙<small>Account</small></b></div></div>
+      </div>
+      <div class="prototype-note reveal"><p>Our prototype focused on reducing the number of decisions required before users could see useful meal recommendations.</p><a class="button" href="../index.html">Open Interactive Prototype ↗</a></div>
+    </section>
+
+    <section class="section" id="testing">
+      <div class="section-heading reveal"><p class="eyebrow">07 / USER TESTING</p><h2>Watching users showed us<br>what the prototype missed.</h2></div>
+      <dl class="test-summary reveal"><div><dt>Participants</dt><dd>2+</dd></div><div><dt>Tasks</dt><dd>Recipe Search · Recipe Details · Saving Recipes</dd></div><div><dt>Format</dt><dd>Moderated usability testing</dd></div></dl>
+      <div class="testing-grid reveal">
+        <article class="worked"><h3><span>✓</span> What worked</h3><ul><li>Filters were easy to understand.</li><li>Users successfully navigated recipe matches.</li><li>Users understood that the heart saves a recipe.</li><li>Recipe ingredient information was useful.</li></ul></article>
+        <article class="improve"><h3><span>!</span> What needed improvement</h3><ul><li>Login failures did not show enough feedback.</li><li>Users wanted password recovery options.</li><li>Instructions needed more detailed quantities.</li><li>Prices should reflect real grocery-store costs.</li><li>One participant requested “No red meat.”</li></ul></article>
+      </div>
+      <div class="quote-band reveal"><p class="eyebrow">IN THEIR WORDS</p><div><blockquote>“I feel like there should be a no red meat option.”<cite>Participant 1</cite></blockquote><blockquote>“I would want more detailed instructions, especially how much of each ingredient to use.”<cite>Participant 2</cite></blockquote><blockquote>“The filters were easy to use.”<cite>Participant 1</cite></blockquote></div></div>
+    </section>
+
+    <section class="section section--sage" id="iterations">
+      <div class="section-heading reveal"><p class="eyebrow">08 / ITERATIONS</p><h2>We turned feedback into<br>specific design changes.</h2></div>
+      <div class="iteration-list reveal">
+        <article><header><b>01</b><h3>Login feedback</h3></header><div class="before"><small>BEFORE</small><p>Login could fail without clearly explaining why.</p></div><span class="iteration-arrow">→</span><div class="after"><small>AFTER</small><p>Add clear error messages and password recovery.</p></div></article>
+        <article><header><b>02</b><h3>Allergy filters</h3></header><div class="before"><small>BEFORE</small><p>Users could only choose allergies from a preset list.</p></div><span class="iteration-arrow">→</span><div class="after"><small>AFTER</small><p>Users can now type and add their own specific allergens.</p></div></article>
+        <article><header><b>03</b><h3>Budget input</h3></header><div class="before"><small>BEFORE</small><p>A slider made it difficult to select an exact budget amount.</p></div><span class="iteration-arrow">→</span><div class="after"><small>AFTER</small><p>Users can now enter a precise budget amount directly.</p></div></article>
+        <article><header><b>04</b><h3>Price information</h3></header><div class="before"><small>BEFORE</small><p>Users could only set a budget based on price per serving.</p></div><span class="iteration-arrow">→</span><div class="after"><small>AFTER</small><p>Users can now choose between per-serving price and total store price.</p></div></article>
+      </div>
+    </section>
+
+    <section class="section final-section" id="final-design">
+      <div class="section-heading reveal"><p class="eyebrow">09 / FINAL DESIGN</p><h2>A simpler way to answer:<br><em>What should I cook?</em></h2><p>The final experience brings recipe discovery, personalization, saving, and grocery planning into one consistent workflow.</p></div>
+      <div class="final-mobile-showcase reveal">
+        <div class="final-shape final-shape--sage"></div><div class="final-shape final-shape--coral"></div>
+        <div class="phone phone--large phone--filters"><div class="phone-bar"></div><small>←</small><h4>Find Your Match</h4><h3>What sounds good?</h3><p>We'll use these picks to find recipes that fit.</p><label>Meal type</label><div class="chip-row"><span>Breakfast</span><span>Lunch</span><span class="active">Dinner</span><span>Snack</span></div><label>Budget</label><div class="budget-shell"><div class="mini-field">$ <strong>12</strong><em>Per serving⌄</em></div><small>Type any amount — we only show recipes at or under it.</small></div><label>Diet preferences</label><div class="chip-row"><span>Vegetarian</span><span class="active">Vegan</span><span>High protein</span><span>Gluten-free</span></div><div class="mock-bottom"><b>⌕<small>Discover</small></b><b>♡<small>Saved</small></b><b>⌑<small>Grocery List</small></b><b>♙<small>Account</small></b></div></div>
+        <div class="phone phone--large phone--matches"><div class="phone-bar"></div><h3>Your matches</h3><p>6 recipes under $12 per serving</p><div class="mini-search">⌕ &nbsp; Search matches</div><div class="match-sorts"><span>Best match</span><span>Under 30 min</span><span>Lowest cost</span></div><div class="mini-recipe"><span class="food-thumb food-one"></span><i>★ 68% match</i><b>Chickpea Coconut Curry</b><small>◷ 25 minutes<br>$3.10/serving</small><em>♥</em></div><div class="mini-recipe green"><span class="food-thumb food-two"></span><i>★ 68% match</i><b>Peanut Noodle Stir-fry</b><small>◷ 20 minutes<br>$2.90/serving</small><em>♥</em></div><div class="mini-recipe yellow"><span class="food-thumb food-three"></span><i>★ 67% match</i><b>Black Bean Tacos</b><small>◷ 20 minutes<br>$2.80/serving</small><em>♡</em></div><div class="mock-bottom"><b>⌕<small>Discover</small></b><b>♡<small>Saved</small></b><b>⌑<small>Grocery List</small></b><b>♙<small>Account</small></b></div></div>
+        <img class="final-bear" src="../public/images/bear_grocery_bag.png" alt="SmartCart bear holding a grocery bag">
+      </div>
+    </section>
+
+    <section class="section" id="learnings">
+      <div class="section-heading reveal"><p class="eyebrow">10 / WHAT WE LEARNED</p><h2>Good usability often comes<br>from the small details.</h2></div>
+      <div class="learning-grid reveal"><article><span>↗</span><h3>Visible Feedback</h3><p>Users should always understand whether an action succeeded or failed.</p></article><article><span>◎</span><h3>Realistic Information</h3><p>Price information is more valuable when it reflects real-world grocery costs.</p></article><article><span>♡</span><h3>Design for Real Behavior</h3><p>Filters and workflows should reflect how users actually describe their food preferences.</p></article></div>
+    </section>
+
+    <section class="section team-section" id="team">
+      <div class="team-intro reveal"><div><p class="eyebrow">11 / TEAM</p><h2>Meet the<br>SmartCart team.</h2></div><img src="../public/images/bear_thumbs_up.png" alt="SmartCart bear giving a thumbs up"></div>
+      <div class="team-grid reveal"><article><span>K</span><h3>Khiem</h3><p>Backend Development</p></article><article><span>N</span><h3>Nidhii</h3><p>UI/UX Design · Research</p></article><article><span>Q</span><h3>Qian</h3><p>Frontend Development</p></article><article><span>S</span><h3>Suhani</h3><p>UI/UX Design</p></article><article><span>T</span><h3>Trisha</h3><p>User Testing</p></article></div>
+      <div class="course-meta reveal"><span>Course <b>CS160</b></span><span>University <b>UC Berkeley</b></span><span>Year <b>2026</b></span></div>
+    </section>
+  </main>
+
+  <footer><div class="footer-brand"><img src="../public/images/logo.png" alt=""><div><b>SmartCart</b><p>Designed and built as a student UX project.</p></div></div><nav aria-label="Footer navigation"><a href="#prototype">Prototype</a><a href="https://github.com/K-coder05/smartcart" target="_blank" rel="noreferrer">GitHub ↗</a><a href="#top">Back to top ↑</a></nav></footer>
+  <script src="script.js"></script>
+</body>
+</html>
