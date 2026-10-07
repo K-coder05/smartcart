@@ -63,8 +63,9 @@ const RecipeService = {
         - Allergies to avoid completely: ${safeAllergies}
         - Dietary preferences to follow: ${safeDiets}
 
-        Add in 1 or 2 keywords that describe the dish for a stock photo search (e.g., 'fajitas', 'curry', 'shakshuka').
-        Never use generic words like 'sheet' or 'bowl'."
+        For "imageKeyword", give the common English name of the underlying dish exactly as it would be titled
+        on Wikipedia, used to find a photo of it (e.g., "Fajita", "Chana masala", "Shakshouka", "Fried rice", "Chili con carne").
+        Leave out brand names, cooking vessels, and minor variations (e.g., "Turkey chili" -> "Chili con carne").
         `;
 
         try {
@@ -129,12 +130,75 @@ const computeMatchPercent = (costPerServing, budget) => {
 
 const RECIPE_IMAGE_FALLBACK = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=800&q=80';
 
-const recipeImageUrl = (recipe) => {
-    if (recipe.displayImageUrl) return recipe.displayImageUrl;
-    const rawKeyword = recipe.imageKeyword ? recipe.imageKeyword.toLowerCase() : "food";
-    const url = `https://loremflickr.com/400/300/food,${rawKeyword.replace(/\s+/g, ',')}`;
-    recipe.displayImageUrl = url;
-    return url;
+// Recipe photos come from the lead image of the best-matching Wikipedia article:
+// free, no API key, CORS-enabled, and far more accurate than tag-based stock photo services.
+const IMAGE_CACHE_KEY = 'smartcart.recipeImages.v1';
+const imageCache = (() => {
+    try { return JSON.parse(localStorage.getItem(IMAGE_CACHE_KEY)) || {}; } catch { return {}; }
+})();
+const pendingImageLookups = new Map();
+
+const saveImageCache = () => {
+    try { localStorage.setItem(IMAGE_CACHE_KEY, JSON.stringify(imageCache)); } catch { /* storage full or blocked */ }
+};
+
+const searchWikipediaImage = async (query) => {
+    const params = new URLSearchParams({
+        action: 'query', format: 'json', origin: '*',
+        generator: 'search', gsrsearch: query, gsrlimit: '1', gsrnamespace: '0',
+        prop: 'pageimages', piprop: 'thumbnail', pithumbsize: '600'
+    });
+    const response = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    const page = Object.values(data.query?.pages || {})[0];
+    return page?.thumbnail?.source || null;
+};
+
+const resolveRecipeImage = (recipe) => {
+    const known = recipe.displayImageUrl || recipe.imageUrl;
+    if (known) return Promise.resolve(recipe.displayImageUrl = known);
+
+    // Try the canonical dish name first, then the full recipe name.
+    const queries = [...new Set([recipe.imageKeyword, recipe.name]
+        .filter(Boolean).map(q => q.trim().toLowerCase()))];
+    const cacheKey = queries.join('|');
+    if (!cacheKey) return Promise.resolve(RECIPE_IMAGE_FALLBACK);
+    if (imageCache[cacheKey]) return Promise.resolve(recipe.displayImageUrl = imageCache[cacheKey]);
+
+    if (!pendingImageLookups.has(cacheKey)) {
+        const lookup = (async () => {
+            for (const query of queries) {
+                try {
+                    const url = await searchWikipediaImage(query);
+                    if (url) {
+                        imageCache[cacheKey] = url;
+                        saveImageCache();
+                        return url;
+                    }
+                } catch (error) {
+                    console.warn("Recipe image lookup failed:", error);
+                }
+            }
+            return RECIPE_IMAGE_FALLBACK;
+        })();
+        pendingImageLookups.set(cacheKey, lookup);
+        lookup.finally(() => pendingImageLookups.delete(cacheKey));
+    }
+    return pendingImageLookups.get(cacheKey).then(url => {
+        // Don't remember the generic fallback, so a later visit can retry the lookup.
+        if (url !== RECIPE_IMAGE_FALLBACK) recipe.displayImageUrl = url;
+        return url;
+    });
+};
+
+const loadRecipeImage = (img, recipe) => {
+    img.dataset.recipe = recipe.name;
+    img.onerror = () => { img.onerror = null; img.src = RECIPE_IMAGE_FALLBACK; };
+    resolveRecipeImage(recipe).then(url => {
+        // Skip if the element was reused for a different recipe while we were looking up.
+        if (img.dataset.recipe === recipe.name) img.src = url;
+    });
 };
 
 const hashPick = (str, arr) => {
@@ -410,11 +474,6 @@ document.addEventListener("DOMContentLoaded", () => {
         emptyState.classList.add('hidden');
 
         list.forEach((recipe) => {
-            const rawKeyword = recipe.imageKeyword ? recipe.imageKeyword.toLowerCase() : "food";
-            const searchKeyword = rawKeyword.replace(/\s+/g, ',');
-            const fastImageUrl = `https://loremflickr.com/400/300/food,${searchKeyword}`;
-            recipe.displayImageUrl = fastImageUrl;
-            const fallbackUrl = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=400&q=80';
 
             const div = document.createElement('div');
             div.className = 'match-card';
@@ -422,7 +481,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             div.innerHTML = `
                 <div class="match-card__thumb" style="overflow: hidden; padding: 0;">
-                    <img src="${fastImageUrl}" alt="${recipe.name}" onerror="this.onerror=null; this.src='${fallbackUrl}';" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img alt="${recipe.name}" decoding="async">
                 </div>
                 <div class="match-card__body">
                     <span class="match-badge">⭐ ${recipe._matchPercent}% match</span>
@@ -432,6 +491,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <button class="btn-heart ${isSaved ? 'is-saved' : ''}" type="button">${isSaved ? '❤️' : '🤍'}</button>
             `;
 
+            loadRecipeImage(div.querySelector('.match-card__thumb img'), recipe);
             div.querySelector('.match-card__body').addEventListener('click', () => openRecipe(recipe));
             div.querySelector('.match-card__thumb').addEventListener('click', () => openRecipe(recipe));
             div.querySelector('.btn-heart').addEventListener('click', async (e) => {
@@ -540,8 +600,7 @@ document.addEventListener("DOMContentLoaded", () => {
         thumb.style.background = hashPick(recipe.name, THUMB_BG);
         const photo = document.getElementById('recipe-photo');
         photo.alt = recipe.name;
-        photo.onerror = () => { photo.onerror = null; photo.src = RECIPE_IMAGE_FALLBACK; };
-        photo.src = recipeImageUrl(recipe);
+        loadRecipeImage(photo, recipe);
 
         const pct = recipe._matchPercent || computeMatchPercent(recipeBudgetCost(recipe), currentFilters.budget);
         document.getElementById('recipe-match-badge').innerText = `⭐ ${pct}% match`;
@@ -625,7 +684,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 costPerServing: recipe.costPerServing,
                 instructions: recipe.instructions || "",
                 ingredients: recipe.ingredients,
-                imageKeyword: recipe.imageKeyword || "food",
+                imageKeyword: recipe.imageKeyword || "",
+                imageUrl: recipe.displayImageUrl || "",
                 savedAt: new Date()
             });
             savedNames.add(recipe.name);
@@ -668,17 +728,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 const docId = docSnap.id;
                 savedNames.add(recipe.name);
 
-                const rawKeyword = recipe.imageKeyword ? recipe.imageKeyword.toLowerCase() : "food";
-                const searchKeyword = rawKeyword.replace(/\s+/g, ',');
-                const fastImageUrl = `https://loremflickr.com/400/300/food,${searchKeyword}`;
-                recipe.displayImageUrl = fastImageUrl;
-                const fallbackUrl = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=400&q=80';
 
                 const div = document.createElement('div');
                 div.className = 'match-card';
                 div.innerHTML = `
                     <div class="match-card__thumb" style="overflow: hidden; padding: 0;">
-                        <img src="${fastImageUrl}" alt="${recipe.name}" onerror="this.onerror=null; this.src='${fallbackUrl}';" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img alt="${recipe.name}" decoding="async">
                     </div>
                     <div class="match-card__body">
                         <h3 class="match-card__title">${recipe.name}</h3>
@@ -687,6 +742,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <button class="btn-heart is-saved" type="button" title="Remove">🗑️</button>
                 `;
 
+                loadRecipeImage(div.querySelector('.match-card__thumb img'), recipe);
                 div.querySelector('.match-card__body').addEventListener('click', () => openRecipe(recipe));
                 div.querySelector('.match-card__thumb').addEventListener('click', () => openRecipe(recipe));
                 div.querySelector('.btn-heart').addEventListener('click', async (e) => {
