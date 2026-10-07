@@ -1,9 +1,3 @@
-import { GoogleGenAI } from 'https://cdn.jsdelivr.net/npm/@google/genai@2.12.0/+esm';
-// IF YOU ARE RUNNING THIS LOCALLY, YOU MUST MAKE A NEW config.js FILE IN THE js DIRECTORY
-// GO TO GOOGLE AI STUDIO TO GET YOUR OWN API KEY AND THEN COPY THIS DOWN TO YOUR FILE EXACTLY:
-// export const GEMINI_API_KEY = "API-KEY-FROM-GOOGLE-AI-STUDIOS"
-import { GEMINI_API_KEY } from './config.js';
-
 const firebaseConfig = {
     apiKey: "AIzaSyD88L-rRngFVPswYg57xbvjMB5a9rlS3Vc",
     authDomain: "smartcart-2a1bc.firebaseapp.com",
@@ -36,8 +30,6 @@ let lastMainTab = "view-wizard";
 let preferredStore = DEFAULT_STORE;
 
 const RecipeService = {
-    ai: new GoogleGenAI({ apiKey: GEMINI_API_KEY }),
-
     async fetchRecipesFromLLM(filters) {
         const safeAllergies = filters.allergies.length ? filters.allergies.join(", ") : "None";
         const safeDiets = filters.diets.length ? filters.diets.join(", ") : "None";
@@ -69,13 +61,17 @@ const RecipeService = {
         `;
 
         try {
-            const response = await this.ai.models.generateContent({
-                model: 'gemini-3.1-flash-lite',
-                contents: prompt,
-                config: {
-                    systemInstruction: "You are a budget-conscious culinary expert designing grocery lists for college students. " +
-                                       "Your primary goal is to minimize out-of-pocket grocery store costs. " +
-                                       "You are a master at calculating prorated ingredient costs versus upfront store prices.",
+            // The Gemini key lives server-side; see functions/api/generate.js
+            const res = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text:
+                    "You are a budget-conscious culinary expert designing grocery lists for college students. " +
+                    "Your primary goal is to minimize out-of-pocket grocery store costs. " +
+                    "You are a master at calculating prorated ingredient costs versus upfront store prices." }] },
+                generationConfig: {
                     responseMimeType: "application/json",
                     temperature: 0.2,
                     responseSchema: {
@@ -108,10 +104,11 @@ const RecipeService = {
                         }
                     }
                 }
+                })
             });
-
-            const rawJSONString = response.text;
-            return JSON.parse(rawJSONString);
+            if (!res.ok) throw new Error(`Recipe request failed (${res.status})`);
+            const data = await res.json();
+            return JSON.parse(data.candidates[0].content.parts[0].text);
         } catch (error) {
             console.error("Error fetching from Gemini:", error);
             throw error;
