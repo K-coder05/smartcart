@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "smartcart",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    // The site lives at the repo root; .assetsignore keeps build/tooling files out of the upload.
+    "directory": "."
+  }
+}
