@@ -29,6 +29,58 @@ let currentList = [];
 let lastMainTab = "view-wizard";
 let preferredStore = DEFAULT_STORE;
 
+// Reads Gemini's SSE stream and returns the full response text. Calls onObject with each
+// top-level object of the streamed JSON array as soon as its closing brace arrives.
+const readGeminiStream = async (res, onObject) => {
+    const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+    let sseBuffer = '';
+    let text = '';
+    let scanned = 0, depth = 0, inString = false, escaped = false, objectStart = -1;
+
+    const scanText = () => {
+        for (; scanned < text.length; scanned++) {
+            const ch = text[scanned];
+            if (inString) {
+                if (escaped) escaped = false;
+                else if (ch === '\\') escaped = true;
+                else if (ch === '"') inString = false;
+            } else if (ch === '"') {
+                inString = true;
+            } else if (ch === '{' || ch === '[') {
+                if (ch === '{' && depth === 1) objectStart = scanned;
+                depth++;
+            } else if (ch === '}' || ch === ']') {
+                depth--;
+                if (ch === '}' && depth === 1 && objectStart >= 0) {
+                    try { onObject(JSON.parse(text.slice(objectStart, scanned + 1))); } catch { /* final parse will surface errors */ }
+                    objectStart = -1;
+                }
+            }
+        }
+    };
+
+    const handleEvent = (line) => {
+        if (!line.startsWith('data:')) return;
+        const chunk = JSON.parse(line.slice(5));
+        if (chunk.error) throw new Error(chunk.error.message || 'Gemini stream error');
+        for (const part of chunk.candidates?.[0]?.content?.parts || []) {
+            if (part.text) text += part.text;
+        }
+        scanText();
+    };
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        sseBuffer += value;
+        const lines = sseBuffer.split(/\r?\n/);
+        sseBuffer = lines.pop();
+        lines.forEach(handleEvent);
+    }
+    handleEvent(sseBuffer.trim());
+    return text;
+};
+
 const RecipeService = {
     async fetchRecipesFromLLM(filters) {
         const safeAllergies = filters.allergies.length ? filters.allergies.join(", ") : "None";
@@ -107,8 +159,10 @@ const RecipeService = {
                 })
             });
             if (!res.ok) throw new Error(`Recipe request failed (${res.status})`);
-            const data = await res.json();
-            return JSON.parse(data.candidates[0].content.parts[0].text);
+            // Start each recipe's photo lookup as soon as its JSON object is complete,
+            // instead of waiting for all 6 recipes to finish generating.
+            const text = await readGeminiStream(res, (recipe) => prefetchRecipeImage(recipe));
+            return JSON.parse(text);
         } catch (error) {
             console.error("Error fetching from Gemini:", error);
             throw error;
@@ -139,27 +193,34 @@ const saveImageCache = () => {
     try { localStorage.setItem(IMAGE_CACHE_KEY, JSON.stringify(imageCache)); } catch { /* storage full or blocked */ }
 };
 
-const searchWikipediaImage = async (query) => {
-    const params = new URLSearchParams({
-        action: 'query', format: 'json', origin: '*',
-        generator: 'search', gsrsearch: query, gsrlimit: '1', gsrnamespace: '0',
-        prop: 'pageimages', piprop: 'thumbnail', pithumbsize: '600'
-    });
-    const response = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
+const WIKIPEDIA_IMAGE_PARAMS = {
+    action: 'query', format: 'json', origin: '*',
+    prop: 'pageimages|pageprops', piprop: 'thumbnail', pithumbsize: '600', ppprop: 'disambiguation'
+};
+
+const fetchWikipediaImage = async (params) => {
+    const response = await fetch(`https://en.wikipedia.org/w/api.php?${new URLSearchParams({ ...WIKIPEDIA_IMAGE_PARAMS, ...params })}`);
     if (!response.ok) return null;
     const data = await response.json();
     const page = Object.values(data.query?.pages || {})[0];
-    return page?.thumbnail?.source || null;
+    if (!page || page.pageprops?.disambiguation !== undefined) return null;
+    return page.thumbnail?.source || null;
 };
+
+// imageKeyword is asked to be an exact Wikipedia title, so a direct (redirect-following) title
+// lookup usually hits and is several times faster than full-text search, which stays as the fallback.
+const searchWikipediaImage = async (query) =>
+    await fetchWikipediaImage({ titles: query, redirects: '1' })
+    || await fetchWikipediaImage({ generator: 'search', gsrsearch: query, gsrlimit: '1', gsrnamespace: '0' });
 
 const resolveRecipeImage = (recipe) => {
     const known = recipe.displayImageUrl || recipe.imageUrl;
     if (known) return Promise.resolve(recipe.displayImageUrl = known);
 
     // Try the canonical dish name first, then the full recipe name.
-    const queries = [...new Set([recipe.imageKeyword, recipe.name]
-        .filter(Boolean).map(q => q.trim().toLowerCase()))];
-    const cacheKey = queries.join('|');
+    const queries = [...new Map([recipe.imageKeyword, recipe.name]
+        .filter(Boolean).map(q => [q.trim().toLowerCase(), q.trim()])).values()];
+    const cacheKey = queries.join('|').toLowerCase();
     if (!cacheKey) return Promise.resolve(RECIPE_IMAGE_FALLBACK);
     if (imageCache[cacheKey]) return Promise.resolve(recipe.displayImageUrl = imageCache[cacheKey]);
 
@@ -187,6 +248,11 @@ const resolveRecipeImage = (recipe) => {
         if (url !== RECIPE_IMAGE_FALLBACK) recipe.displayImageUrl = url;
         return url;
     });
+};
+
+// Resolve the photo URL and warm the browser cache so the card renders with its image ready.
+const prefetchRecipeImage = (recipe) => {
+    resolveRecipeImage(recipe).then(url => { new Image().src = url; });
 };
 
 const loadRecipeImage = (img, recipe) => {
